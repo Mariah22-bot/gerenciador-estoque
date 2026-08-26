@@ -1,29 +1,23 @@
-import type { JSX } from "react/jsx-runtime";
+import type { JSX } from 'react';
+import Icon from './Icon';
 
 export default function Header(): JSX.Element {
     return (
-        <header className="flex items-center justify-between bg-white px-6 py-4 shadow-sm border-b border-gray-100">
-            <div className="flex items-center space-x-4">
-                <h1 className="text-xl font-bold text-gray-800">Painel de Controle</h1>
-            </div>
-
-            <div className="flex items-center space-x-4">
+        <header className="h-[42px] flex items-center justify-between bg-black px-4 text-white">
+            <div />
+            <div className="flex items-center gap-4">
                 <div className="relative">
+                    <Icon name="search" size={12} className="absolute left-2 top-2 text-slate-300" />
                     <input
-                        type="text"
-                        placeholder="Buscar..."
-                        className="w-64 rounded-lg border border-gray-200 bg-gray-50 px-4 py-2 text-sm text-gray-700 outline-none focus:border-indigo-500 focus:bg-white transition-all"
+                        type="search" placeholder="Buscar SKU ou produto..."
+                        className="w-48 rounded-full border border-slate-700 bg-transparent py-1 pl-7 pr-3 text-[9px] text-white outline-none focus:border-slate-400"
                     />
                 </div>
-
-                <div className="flex items-center space-x-3 border-l border-gray-200 pl-4">
-                    <div className="h-9 w-9 rounded-full bg-indigo-600 font-semibold text-white flex items-center justify-center">
-                        M
-                    </div>
-                    <div className="flex flex-col">
-                        <span className="text-sm font-semibold text-gray-800">MariÁH</span>
-                        <span className="text-xs text-gray-500">Administrador</span>
-                    </div>
+                <Icon name="moon" size={13} className="text-slate-300" />
+                <Icon name="bell" size={13} className="text-slate-300" />
+                <div className="flex items-center gap-2 border-l border-slate-700 pl-3">
+                    <div className="h-5 w-5 rounded-full bg-[#087f8c] text-[8px] flex items-center justify-center">RC</div>
+                    <span className="text-[9px]">Rafael Costa</span>
                 </div>
             </div>
         </header>

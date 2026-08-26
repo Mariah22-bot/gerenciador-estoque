@@ -1,0 +1,103 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ==========================================================================
+   1. VARIÁVEIS GLOBAIS & TEMAS (CSS Variables)
+   ========================================================================== */
+:root {
+    --background: #f5f7f8;
+    --foreground: #1e2b34;
+    --primary: #007d8b;
+    --primary-hover: #006c78;
+    --card-bg: #ffffff;
+    --border-color: #e2e8f0;
+}
+
+/* ==========================================================================
+   2. REGRAS GLOBAIS E RESET
+   ========================================================================== */
+@layer base {
+
+    *,
+    ::before,
+    ::after {
+        box-sizing: border-box;
+    }
+
+    html {
+        scroll-behavior: smooth;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+        background-color: var(--background);
+        color: var(--foreground);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        min-height: 100vh;
+        line-height: 1.5;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        overflow-x: hidden;
+    }
+
+    /* Seleção de texto personalizada */
+    ::selection {
+        background-color: rgba(99, 102, 241, 0.25);
+        color: #4f46e5;
+    }
+}
+
+/* ==========================================================================
+   3. CUSTOMIZAÇÃO DA BARRA DE ROLAGEM (Scrollbar)
+   ========================================================================== */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* Dark mode scrollbar */
+.dark ::-webkit-scrollbar-thumb {
+    background: #334155;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+    background: #475569;
+}
+
+/* ==========================================================================
+   4. UTILITÁRIOS CUSTOMIZADOS (Tailwind Layer Utilities)
+   ========================================================================== */
+@layer utilities {
+
+    /* Transição suave padrão para elementos interativos */
+    .transition-default {
+        transition: all 0.2s ease-in-out;
+    }
+
+    /* Efeito de vidro (Glassmorphism) */
+    .glass {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+    }
+
+    .dark .glass {
+        background: rgba(15, 23, 42, 0.7);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+}
