@@ -16,8 +16,8 @@ export default function Header(): JSX.Element {
                 <Icon name="moon" size={13} className="text-slate-300" />
                 <Icon name="bell" size={13} className="text-slate-300" />
                 <div className="flex items-center gap-2 border-l border-slate-700 pl-3">
-                    <div className="h-5 w-5 rounded-full bg-[#087f8c] text-[8px] flex items-center justify-center">RC</div>
-                    <span className="text-[9px]">Rafael Costa</span>
+                    <div className="h-5 w-5 rounded-full bg-[#087f8c] text-[8px] flex items-center justify-center">VF</div>
+                    <span className="text-[9px]">Vitor Filho</span>
                 </div>
             </div>
         </header>

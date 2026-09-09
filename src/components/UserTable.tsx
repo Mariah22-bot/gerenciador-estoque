@@ -2,14 +2,14 @@ import type { JSX } from 'react';
 import Icon from './Icon';
 
 const movements = [
-    ['MLB-4828-FTW', 'Fone Bluetooth TWS Pro', 'Saída', '-48', '26/08/26, 14:32', 'Alta'],
-    ['MLB-1193-SCV', 'Suporte Celular Veicular Magn...', 'Entrada', '+300', '26/08/26, 11:05', 'Alta'],
-    ['MLB-7741-HUB', 'Hub HDMI 4 Portas 4K', 'Entrada', '+25', '25/08/26, 16:48', 'Baixa'],
-    ['MLB-3392-CUB', 'Cabo USB-C Nylon 2m', 'Saída', '-120', '25/08/26, 09:20', 'Alta'],
-    ['MLB-6650-TKM', 'Teclado Mecânico RGB Switch...', 'Saída', '-4', '24/08/26, 18:12', 'Baixa'],
-    ['MLB-2287-SWD', 'Smartwatch D20 Preto', 'Saída', '-63', '24/08/26, 13:40', 'Média'],
-    ['MLB-5514-WFC', 'Webcam Full HD com Microfone', 'Entrada', '+60', '23/08/26, 10:02', 'Baixa'],
-    ['MLB-9383-SCP', 'Caixa de Som Portátil 20W', 'Saída', '-11', '22/08/26, 15:27', 'Média'],
+    ['MLB-4828-FTW', 'Protetor de sofá', 'Saída', '-48', '26/08/26, 14:32', 'Alta'],
+    ['MLB-1193-SCV', 'Protetor de colchão', 'Entrada', '+300', '26/08/26, 11:05', 'Alta'],
+    ['MLB-7741-HUB', 'Capa de travesseiro', 'Entrada', '+25', '25/08/26, 16:48', 'Baixa'],
+    ['MLB-3392-CUB', 'Capas de Cadeira', 'Saída', '-120', '25/08/26, 09:20', 'Alta'],
+    ['MLB-6650-TKM', 'Saia de cama', 'Saída', '-4', '24/08/26, 18:12', 'Baixa'],
+    ['MLB-2287-SWD', 'Toalha de rosto', 'Saída', '-63', '24/08/26, 13:40', 'Média'],
+    ['MLB-5514-WFC', 'Toalha de mesa', 'Entrada', '+60', '23/08/26, 10:02', 'Baixa'],
+    ['MLB-9383-SCP', 'Tapetes', 'Saída', '-11', '22/08/26, 15:27', 'Média'],
 ];
 
 export default function UserTable(): JSX.Element {
