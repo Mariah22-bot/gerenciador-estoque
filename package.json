@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "server:dev": "tsx watch server/server.ts",
+    "db:init": "tsx server/database/init.ts",
     "server:typecheck": "tsc -p tsconfig.server.json --noEmit",
     "build": "tsc -b && vite build",
     "lint": "eslint .",

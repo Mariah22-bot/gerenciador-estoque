@@ -1,4 +1,28 @@
-# React + TypeScript + Vite
+# Gerenciador de estoque
+
+Dashboard de monitoramento do giro de estoque com React, TailwindCSS, Express, TypeScript e PostgreSQL.
+
+## Backend local
+
+1. Instale o PostgreSQL e crie um banco chamado `gerenciador_estoque`.
+2. Confira a variável `DATABASE_URL` no arquivo `.env`.
+3. Inicialize as tabelas:
+
+  `npm run db:init`
+
+4. Inicie a API:
+
+  `npm run server:dev`
+
+A API ficará disponível em `http://localhost:3000`. O endpoint `GET /api/health` verifica a conexão com o banco. Os endpoints `GET /api/products` e `GET /api/movements` consultam os dados de estoque.
+
+## Frontend
+
+Inicie o frontend com `npm run dev`.
+
+---
+
+## Informações do template Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
