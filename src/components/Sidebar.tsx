@@ -36,7 +36,6 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps): JSX.
                         >
                                 <Icon name={item.icon} size={12} />
                             <span>{item.label}</span>
-                                {item.id === 'users' && <span className="ml-auto text-[8px] text-slate-500">1.482</span>}
                         </button>
                     ))}
                 </nav>

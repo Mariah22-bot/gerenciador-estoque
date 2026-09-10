@@ -44,6 +44,10 @@ export const inventoryApi = {
   getSummary: () => request<DashboardSummary>('/api/dashboard/summary'),
   getMovements: () => request<Movement[]>('/api/movements'),
   getProducts: () => request<Product[]>('/api/products'),
+  createProduct: (payload: { sku: string; name: string; category?: string; quantity?: number; unitPrice?: number; minimumQuantity?: number }) => request<Product>('/api/products', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  }),
   createMovement: (payload: { productId: number; type: 'entrada' | 'saida'; quantity: number; notes?: string }) => request<Movement>('/api/movements', {
     method: 'POST',
     body: JSON.stringify(payload),
