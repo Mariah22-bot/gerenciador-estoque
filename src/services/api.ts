@@ -8,6 +8,16 @@ export interface Movement {
   notes: string | null;
 }
 
+export interface Product {
+  id: number;
+  sku: string;
+  name: string;
+  category: string | null;
+  quantity: number;
+  unit_price: string;
+  minimum_quantity: number;
+}
+
 export interface DashboardSummary {
   product_count: number;
   inactive_product_count: number;
@@ -33,4 +43,9 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 export const inventoryApi = {
   getSummary: () => request<DashboardSummary>('/api/dashboard/summary'),
   getMovements: () => request<Movement[]>('/api/movements'),
+  getProducts: () => request<Product[]>('/api/products'),
+  createMovement: (payload: { productId: number; type: 'entrada' | 'saida'; quantity: number; notes?: string }) => request<Movement>('/api/movements', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  }),
 };
