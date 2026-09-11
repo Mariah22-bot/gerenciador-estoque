@@ -4,6 +4,7 @@ import Header from './components/Header';
 import Dashboard from './pages/Dashboard';
 import Products from './pages/Products';
 import Analytics from './pages/Analytics';
+import Settings from './pages/Settings';
 import type { TabId } from './types/dashboard';
 
 export default function App(): JSX.Element {
@@ -19,11 +20,7 @@ export default function App(): JSX.Element {
           {activeTab === 'dashboard' && <Dashboard />}
           {activeTab === 'analytics' && <Analytics />}
           {activeTab === 'users' && <Products />}
-          {activeTab === 'settings' && (
-            <div className="flex items-center justify-center h-64 bg-white rounded-xl border border-gray-100 shadow-sm">
-              <p className="text-gray-500 font-medium">Conteúdo da tela <span className="text-indigo-600 capitalize">{activeTab}</span> em desenvolvimento...</p>
-            </div>
-          )}
+          {activeTab === 'settings' && <Settings />}
         </main>
       </div>
     </div>
