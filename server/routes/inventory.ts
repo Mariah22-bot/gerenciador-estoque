@@ -3,6 +3,58 @@ import { pool } from '../db.js';
 
 export const inventoryRouter = Router();
 
+inventoryRouter.get('/analytics', async (_request, response) => {
+  try {
+    const topProducts = await pool.query(`
+      SELECT products.name, products.sku,
+             COALESCE(SUM(movements.quantity) FILTER (WHERE movements.type = 'saida'), 0)::int AS units_moved
+      FROM products
+      LEFT JOIN stock_movements AS movements
+        ON movements.product_id = products.id AND movements.occurred_at >= NOW() - INTERVAL '30 days'
+      GROUP BY products.id
+      ORDER BY units_moved DESC, products.name ASC
+      LIMIT 10
+    `);
+
+    const abc = await pool.query(`
+      WITH product_values AS (
+        SELECT products.id, COALESCE(SUM(movements.quantity * products.unit_price)
+          FILTER (WHERE movements.type = 'saida'), 0) AS total_value
+        FROM products
+        LEFT JOIN stock_movements AS movements ON movements.product_id = products.id
+        GROUP BY products.id
+      ), ranked AS (
+        SELECT total_value, SUM(total_value) OVER () AS grand_total,
+               SUM(total_value) OVER (ORDER BY total_value DESC ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS accumulated
+        FROM product_values
+      )
+      SELECT CASE
+        WHEN grand_total = 0 THEN 'C'
+        WHEN accumulated / grand_total <= 0.8 THEN 'A'
+        WHEN accumulated / grand_total <= 0.95 THEN 'B'
+        ELSE 'C'
+      END AS classification, COUNT(*)::int AS products
+      FROM ranked
+      GROUP BY classification
+      ORDER BY classification
+    `);
+
+    const turnover = await pool.query(`
+      SELECT TO_CHAR(DATE_TRUNC('month', occurred_at), 'Mon') AS month,
+             COALESCE(SUM(quantity) FILTER (WHERE type = 'saida'), 0)::int AS exits,
+             COALESCE(SUM(quantity) FILTER (WHERE type = 'entrada'), 0)::int AS entries
+      FROM stock_movements
+      WHERE occurred_at >= DATE_TRUNC('month', NOW()) - INTERVAL '5 months'
+      GROUP BY DATE_TRUNC('month', occurred_at)
+      ORDER BY DATE_TRUNC('month', occurred_at)
+    `);
+
+    response.json({ topProducts: topProducts.rows, abc: abc.rows, turnover: turnover.rows });
+  } catch {
+    response.status(500).json({ error: 'Não foi possível calcular as análises do estoque.' });
+  }
+});
+
 inventoryRouter.get('/dashboard/summary', async (_request, response) => {
   try {
     const result = await pool.query(`
@@ -81,6 +133,87 @@ inventoryRouter.post('/products', async (request, response) => {
     response.status(isDuplicate ? 409 : 500).json({
       error: isDuplicate ? 'Já existe um produto com este SKU.' : 'Não foi possível cadastrar o produto.',
     });
+  }
+});
+
+inventoryRouter.put('/products/:id', async (request, response) => {
+  const productId = Number(request.params.id);
+  const { sku, name, category, quantity = 0, unitPrice = 0, minimumQuantity = 0 } = request.body as {
+    sku?: string;
+    name?: string;
+    category?: string;
+    quantity?: number;
+    unitPrice?: number;
+    minimumQuantity?: number;
+  };
+
+  if (!Number.isInteger(productId) || productId <= 0) {
+    response.status(400).json({ error: 'Identificador do produto inválido.' });
+    return;
+  }
+
+  if (!sku?.trim() || !name?.trim()) {
+    response.status(400).json({ error: 'SKU e nome são obrigatórios.' });
+    return;
+  }
+
+  try {
+    const result = await pool.query(`
+      UPDATE products
+      SET sku = $1,
+          name = $2,
+          category = $3,
+          quantity = $4,
+          unit_price = $5,
+          minimum_quantity = $6,
+          updated_at = NOW()
+      WHERE id = $7
+      RETURNING id, sku, name, category, quantity, unit_price, minimum_quantity
+    `, [sku.trim(), name.trim(), category?.trim() ?? null, quantity, unitPrice, minimumQuantity, productId]);
+
+    if (result.rowCount === 0) {
+      response.status(404).json({ error: 'Produto não encontrado.' });
+      return;
+    }
+
+    response.json(result.rows[0]);
+  } catch (error) {
+    const isDuplicate = error instanceof Error && error.message.includes('products_sku_key');
+    response.status(isDuplicate ? 409 : 500).json({
+      error: isDuplicate ? 'Já existe um produto com este SKU.' : 'Não foi possível atualizar o produto.',
+    });
+  }
+});
+
+inventoryRouter.delete('/products/:id', async (request, response) => {
+  const productId = Number(request.params.id);
+
+  if (!Number.isInteger(productId) || productId <= 0) {
+    response.status(400).json({ error: 'Identificador do produto inválido.' });
+    return;
+  }
+
+  try {
+    const product = await pool.query('SELECT id, quantity FROM products WHERE id = $1', [productId]);
+
+    if (product.rowCount === 0) {
+      response.status(404).json({ error: 'Produto não encontrado.' });
+      return;
+    }
+
+    const movementCount = await pool.query('SELECT COUNT(*)::int AS total FROM stock_movements WHERE product_id = $1', [productId]);
+
+    if (Number(product.rows[0].quantity) > 0 || Number(movementCount.rows[0].total) > 0) {
+      response.status(409).json({
+        error: 'Produto com estoque ou movimentações não pode ser excluído. Zere o estoque e remova os registros antes de apagar.',
+      });
+      return;
+    }
+
+    await pool.query('DELETE FROM products WHERE id = $1', [productId]);
+    response.json({ success: true });
+  } catch {
+    response.status(500).json({ error: 'Não foi possível excluir o produto.' });
   }
 });
 

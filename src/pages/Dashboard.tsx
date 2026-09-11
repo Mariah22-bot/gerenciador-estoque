@@ -1,9 +1,9 @@
-import { useEffect, useState, type JSX } from 'react';
+import { useCallback, useEffect, useState, type JSX } from 'react';
 import StatCard from '../components/StatCard';
 import UserTable from '../components/UserTable';
 import AnalyticsChart from '../components/AnalyticsChart';
 import MovementModal from '../components/MovementModal';
-import { inventoryApi, type DashboardSummary, type Movement, type Product } from '../services/api';
+import { inventoryApi, notifyInventoryRefresh, type DashboardSummary, type Movement, type Product } from '../services/api';
 
 const emptySummary: DashboardSummary = { product_count: 0, inactive_product_count: 0, invested_capital: '0', entries: 0, exits: 0 };
 
@@ -15,11 +15,15 @@ export default function Dashboard(): JSX.Element {
     const [error, setError] = useState<string | null>(null);
     const [showMovementModal, setShowMovementModal] = useState(false);
 
-    async function loadDashboard(): Promise<void> {
+    const loadDashboard = useCallback(async (): Promise<void> => {
         setError(null);
         setLoading(true);
         try {
-            const [nextSummary, nextMovements, nextProducts] = await Promise.all([inventoryApi.getSummary(), inventoryApi.getMovements(), inventoryApi.getProducts()]);
+            const [nextSummary, nextMovements, nextProducts] = await Promise.all([
+                inventoryApi.getSummary(),
+                inventoryApi.getMovements(),
+                inventoryApi.getProducts(),
+            ]);
             setSummary(nextSummary);
             setMovements(nextMovements);
             setProducts(nextProducts);
@@ -28,23 +32,24 @@ export default function Dashboard(): JSX.Element {
         } finally {
             setLoading(false);
         }
-    }
+    }, []);
 
     useEffect(() => {
-        Promise.all([inventoryApi.getSummary(), inventoryApi.getMovements(), inventoryApi.getProducts()])
-            .then(([nextSummary, nextMovements, nextProducts]) => {
-                setSummary(nextSummary);
-                setMovements(nextMovements);
-                setProducts(nextProducts);
-            })
-            .catch((requestError: unknown) => {
-                setError(requestError instanceof Error ? requestError.message : 'Não foi possível carregar o dashboard.');
-            })
-            .finally(() => setLoading(false));
-    }, []);
+        void loadDashboard();
+    }, [loadDashboard]);
+
+    useEffect(() => {
+        const handleInventoryUpdate = (): void => {
+            void loadDashboard();
+        };
+
+        window.addEventListener('inventory:updated', handleInventoryUpdate);
+        return () => window.removeEventListener('inventory:updated', handleInventoryUpdate);
+    }, [loadDashboard]);
 
     async function handleMovementSubmit(payload: { productId: number; type: 'entrada' | 'saida'; quantity: number; notes?: string }): Promise<void> {
         await inventoryApi.createMovement(payload);
+        notifyInventoryRefresh();
         await loadDashboard();
     }
 
