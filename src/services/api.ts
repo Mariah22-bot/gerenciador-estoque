@@ -14,8 +14,19 @@ export interface Product {
   name: string;
   category: string | null;
   quantity: number;
-  unit_price: string;
-  minimum_quantity: number;
+  unit_price?: string;
+  minimum_quantity?: number;
+  fonte: string;
+  secao: string | null;
+  produto: string;
+  modelo: string | null;
+  cor: string | null;
+  tamanho: string | null;
+  unidade: string;
+  tecido_composicao: string | null;
+  item: string | null;
+  medida: string | null;
+  observacoes: string | null;
 }
 
 export interface DashboardSummary {
@@ -33,12 +44,18 @@ export interface AnalyticsData {
 }
 
 export type ProductPayload = {
-  sku: string;
-  name: string;
-  category?: string;
+  fonte?: string;
+  secao?: string;
+  produto: string;
+  modelo?: string;
+  cor?: string;
+  tamanho?: string;
   quantity?: number;
-  unitPrice?: number;
-  minimumQuantity?: number;
+  unidade?: string;
+  tecidoComposicao?: string;
+  item?: string;
+  medida?: string;
+  observacoes?: string;
 };
 
 export function notifyInventoryRefresh(): void {
