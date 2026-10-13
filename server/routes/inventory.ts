@@ -7,7 +7,7 @@ inventoryRouter.get('/analytics', async (_request, response) => {
   try {
     const topProducts = await pool.query(`
       SELECT e.produto AS name,
-             CAST(e.id AS VARCHAR) AS sku,
+             COALESCE(e.sku, CAST(e.id AS VARCHAR)) AS sku,
              COALESCE(SUM(movements.quantity) FILTER (WHERE movements.type = 'saida'), 0)::int AS units_moved
       FROM estoque AS e
       LEFT JOIN stock_movements AS movements
@@ -20,7 +20,7 @@ inventoryRouter.get('/analytics', async (_request, response) => {
     const abc = await pool.query(`
       WITH product_values AS (
         SELECT e.id,
-               COALESCE(SUM(movements.quantity * 0) FILTER (WHERE movements.type = 'saida'), 0) AS total_value
+               COALESCE(SUM(movements.quantity * e.unit_price) FILTER (WHERE movements.type = 'saida'), 0) AS total_value
         FROM estoque AS e
         LEFT JOIN stock_movements AS movements ON movements.product_id = e.id
         GROUP BY e.id
@@ -62,7 +62,7 @@ inventoryRouter.get('/dashboard/summary', async (_request, response) => {
       SELECT
         COUNT(*)::int AS product_count,
         COUNT(*) FILTER (WHERE COALESCE(quantidade, 0) = 0)::int AS inactive_product_count,
-        0::numeric AS invested_capital,
+        COALESCE(SUM(COALESCE(quantidade, 0) * unit_price), 0)::numeric AS invested_capital,
         COALESCE((SELECT SUM(quantity) FROM stock_movements WHERE type = 'entrada'), 0)::int AS entries,
         COALESCE((SELECT SUM(quantity) FROM stock_movements WHERE type = 'saida'), 0)::int AS exits
       FROM estoque
@@ -78,14 +78,14 @@ inventoryRouter.get('/products', async (_request, response) => {
   try {
     const result = await pool.query(`
       SELECT e.id,
-             CAST(e.id AS VARCHAR(80)) AS sku,
+             COALESCE(e.sku, CAST(e.id AS VARCHAR(80))) AS sku,
              COALESCE(e.produto, 'Sem descrição') AS name,
              COALESCE(e.secao, e.fonte) AS category,
-               COALESCE(e.quantidade, 0) AS quantity,
-             0::numeric AS unit_price,
-             0 AS minimum_quantity,
-               e.fonte, e.secao, COALESCE(e.produto, 'Sem descrição') AS produto, e.modelo, e.cor, e.tamanho,
-              e.unidade, e.tecido_composicao, e.item, e.medida, e.observacoes,
+             COALESCE(e.quantidade, 0) AS quantity,
+             e.unit_price,
+             e.minimum_quantity,
+             e.fonte, e.secao, COALESCE(e.produto, 'Sem descrição') AS produto, e.modelo, e.cor, e.tamanho,
+             e.unidade, e.tecido_composicao, e.item, e.medida, e.observacoes,
              e.created_at,
              e.updated_at
       FROM estoque AS e
@@ -103,7 +103,7 @@ inventoryRouter.get('/movements', async (_request, response) => {
     const result = await pool.query(`
       SELECT movements.id, movements.type, movements.quantity,
              movements.occurred_at, movements.notes,
-             CAST(e.id AS VARCHAR(80)) AS sku,
+             COALESCE(e.sku, CAST(e.id AS VARCHAR(80))) AS sku,
              e.produto AS product_name
       FROM stock_movements AS movements
       INNER JOIN estoque AS e ON e.id = movements.product_id
@@ -142,12 +142,12 @@ inventoryRouter.post('/products', async (request, response) => {
       INSERT INTO estoque (fonte, secao, produto, quantidade, unidade, modelo, cor, tamanho, tecido_composicao, item, medida, observacoes)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
       RETURNING id,
-                CAST(id AS VARCHAR(80)) AS sku,
+                COALESCE(sku, CAST(id AS VARCHAR(80))) AS sku,
                 COALESCE(produto, 'Sem descrição') AS name,
                 COALESCE(secao, fonte) AS category,
                 COALESCE(quantidade, 0) AS quantity,
-                0::numeric AS unit_price,
-                0 AS minimum_quantity,
+                unit_price,
+                minimum_quantity,
                 fonte, secao, COALESCE(produto, 'Sem descrição') AS produto, modelo, cor, tamanho, unidade, tecido_composicao, item, medida, observacoes
     `, [fonte.trim(), secao?.trim() ?? null, produto.trim(), quantity, unidade.trim(), modelo?.trim() ?? null, cor?.trim() ?? null, tamanho?.trim() ?? null, tecidoComposicao?.trim() ?? null, item?.trim() ?? null, medida?.trim() ?? null, observacoes?.trim() ?? null]);
 
@@ -192,12 +192,12 @@ inventoryRouter.put('/products/:id', async (request, response) => {
           item = $10, medida = $11, observacoes = $12, updated_at = NOW()
         WHERE id = $13
       RETURNING id,
-                CAST(id AS VARCHAR(80)) AS sku,
+                COALESCE(sku, CAST(id AS VARCHAR(80))) AS sku,
                 COALESCE(produto, 'Sem descrição') AS name,
                 COALESCE(secao, fonte) AS category,
                 COALESCE(quantidade, 0) AS quantity,
-                0::numeric AS unit_price,
-                0 AS minimum_quantity,
+                unit_price,
+                minimum_quantity,
                 fonte, secao, COALESCE(produto, 'Sem descrição') AS produto, modelo, cor, tamanho, unidade, tecido_composicao, item, medida, observacoes
     `, [fonte.trim(), secao?.trim() ?? null, produto.trim(), modelo?.trim() ?? null, cor?.trim() ?? null, tamanho?.trim() ?? null, quantity, unidade.trim(), tecidoComposicao?.trim() ?? null, item?.trim() ?? null, medida?.trim() ?? null, observacoes?.trim() ?? null, productId]);
 

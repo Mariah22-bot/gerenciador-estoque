@@ -16,6 +16,8 @@ Dashboard de monitoramento do giro de estoque com React, TailwindCSS, Express, T
 
 A API ficará disponível em `http://localhost:3000`. O endpoint `GET /api/health` verifica a conexão com o banco. Os endpoints `GET /api/products` e `GET /api/movements` consultam os dados de estoque.
 
+`npm run db:init` aplica o esquema em uma transação e não apaga tabelas. Se encontrar o esquema antigo (`products`), migra os produtos e as movimentações para `estoque` e renomeia a tabela original para `products_legacy_archive`, mantendo os dados antigos. SKUs, preços e quantidades mínimas são preservados. Se `products` e `estoque` já tiverem dados ao mesmo tempo, a inicialização é cancelada para evitar uma mesclagem ambígua; faça backup e resolva essa situação antes de continuar.
+
 ## Frontend
 
 Inicie o frontend com `npm run dev`.
