@@ -1,5 +1,12 @@
-DROP TABLE IF EXISTS stock_movements;
-DROP TABLE IF EXISTS products;
+-- Este esquema é aditivo: não apague tabelas nem dados durante a inicialização.
+-- A estrutura antiga precisa de migração explícita antes de usar o esquema atual.
+DO $$
+BEGIN
+  IF to_regclass('public.products') IS NOT NULL THEN
+    RAISE EXCEPTION
+      'Foi encontrada a tabela legada "products". Nenhum dado foi alterado; faça backup e migre os dados para "estoque" antes de inicializar.';
+  END IF;
+END $$;
 
 CREATE TABLE IF NOT EXISTS estoque (
   id SERIAL PRIMARY KEY,
