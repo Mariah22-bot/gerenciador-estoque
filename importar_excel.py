@@ -11,6 +11,7 @@ import psycopg2
 
 ROOT = Path(__file__).parent
 DEFAULT_EXCEL_PATH = ROOT / 'produtos-estoque.xlsx'
+EXPECTED_REPLACEMENT_PRODUCTS = 252
 
 
 class Product(TypedDict):
@@ -21,6 +22,7 @@ class Product(TypedDict):
 	cor: str | None
 	tamanho: str | None
 	quantidade: int | None
+	unit_price: Decimal | None
 	unidade: str
 	tecido_composicao: str | None
 	item: str | None
@@ -41,9 +43,10 @@ FIELD_ALIASES = {
 	'item': {'item'},
 	'medida': {'medida', 'measure', 'dimensao', 'dimensoes', 'dimensions'},
 	'observacoes': {'observacao', 'observacoes', 'observation', 'observations', 'notes'},
+	'unit_price': {'preco', 'price', 'valor', 'preco_unitario', 'valor_unitario', 'unit_price'},
 }
 
-PRODUCT_FIELDS = tuple(FIELD_ALIASES)
+PRODUCT_FIELDS = tuple(field for field in FIELD_ALIASES if field != 'unit_price')
 IDENTITY_FIELDS = ('fonte', 'secao', 'produto', 'modelo', 'cor', 'tamanho')
 VARIANT_FIELDS = ('produto', 'modelo', 'cor', 'tamanho')
 
@@ -112,6 +115,36 @@ def parse_quantity(value: object, row_number: int) -> int | None:
 	return parse_quantity_details(value, row_number)[0]
 
 
+def parse_price(value: object, row_number: int) -> Decimal | None:
+	text = normalize_text(value)
+	if text is None or text in {'-', '--', '–', '—'}:
+		return None
+
+	text = text.replace('R$', '').replace(' ', '')
+	if ',' in text and '.' in text:
+		if text.rfind(',') > text.rfind('.'):
+			text = text.replace('.', '').replace(',', '.')
+		else:
+			text = text.replace(',', '')
+	elif ',' in text:
+		text = text.replace(',', '.')
+
+	try:
+		price = Decimal(text).quantize(Decimal('0.01'))
+	except InvalidOperation as error:
+		raise ValueError(f'Preço inválido na linha {row_number}: {text!r}.') from error
+
+	if not price.is_finite() or price < 0 or price >= Decimal('10000000000'):
+		raise ValueError(f'O preço na linha {row_number} deve ser positivo e ter até 10 dígitos inteiros.')
+	return price
+
+
+def normalize_section(value: str | None) -> str | None:
+	if value is None:
+		return None
+	return re.sub(r'^\s*\d+\.\s*', '', value).strip() or None
+
+
 def read_products(excel_path: Path = DEFAULT_EXCEL_PATH) -> list[Product]:
 	if not excel_path.is_file():
 		raise FileNotFoundError(f'Planilha não encontrada: {excel_path}')
@@ -156,23 +189,26 @@ def read_products(excel_path: Path = DEFAULT_EXCEL_PATH) -> list[Product]:
 	def append_product(
 		product_name: str,
 		*,
+		category: str | None = None,
 		model: str | None = None,
 		color: str | None = None,
 		size: str | None = None,
 		quantity: int | None = None,
 		unit: str | None = None,
 		tissue: str | None = None,
+		unit_price: Decimal | None = None,
 		measure: str | None = None,
 		notes: str | None = None,
 	) -> None:
 		products.append({
 			'fonte': 'VARIADOS',
-			'secao': section,
+			'secao': normalize_section(category) if category is not None else normalize_section(section),
 			'produto': product_name,
 			'modelo': model,
 			'cor': color,
 			'tamanho': size,
 			'quantidade': quantity,
+			'unit_price': unit_price,
 			'unidade': unit or 'un',
 			'tecido_composicao': tissue,
 			'item': None,
@@ -278,7 +314,7 @@ def read_products(excel_path: Path = DEFAULT_EXCEL_PATH) -> list[Product]:
 
 		attributes: dict[str, str | None] = {}
 		for field, column_index in field_columns.items():
-			if field in {'produto', 'modelo', 'fonte', 'unidade', 'quantidade'}:
+			if field in {'produto', 'modelo', 'fonte', 'secao', 'unidade', 'quantidade', 'unit_price'}:
 				continue
 			attributes[field] = values[column_index]
 		quantity = None
@@ -287,14 +323,18 @@ def read_products(excel_path: Path = DEFAULT_EXCEL_PATH) -> list[Product]:
 		if 'quantidade' in field_columns:
 			quantity, inferred_unit, quantity_notes = parse_quantity_details(values[field_columns['quantidade']], row_number)
 			notes = notes or quantity_notes
+		unit_price = parse_price(values[field_columns['unit_price']], row_number) if 'unit_price' in field_columns else None
 		unit_value = values[field_columns['unidade']] if 'unidade' in field_columns else None
+		category_value = values[field_columns['secao']] if 'secao' in field_columns else None
 		append_product(
 			product_value,
+			category=category_value,
 			model=model_value,
 			color=attributes.get('cor'),
 			size=attributes.get('tamanho'),
 			quantity=quantity,
 			unit=unit_value or inferred_unit,
+			unit_price=unit_price,
 			tissue=attributes.get('tecido_composicao'),
 			measure=attributes.get('medida'),
 			notes=notes,
@@ -309,26 +349,59 @@ def read_products(excel_path: Path = DEFAULT_EXCEL_PATH) -> list[Product]:
 def main() -> None:
 	parser = argparse.ArgumentParser(description='Importa produtos de uma planilha para a tabela estoque.')
 	parser.add_argument('arquivo', nargs='?', type=Path, default=DEFAULT_EXCEL_PATH, help='Caminho da planilha .xlsx')
+	parser.add_argument('--replace', action='store_true', help='Substitui todo o catálogo e as movimentações ativas')
 	args = parser.parse_args()
 	products = read_products(args.arquivo)
+	if args.replace:
+		if len(products) != EXPECTED_REPLACEMENT_PRODUCTS:
+			raise ValueError(
+				f'A substituição exige exatamente {EXPECTED_REPLACEMENT_PRODUCTS} produtos; '
+				f'a planilha contém {len(products)}.'
+			)
+		if any(product['unit_price'] is None for product in products):
+			raise ValueError('A substituição exige preço preenchido em todos os produtos.')
+		if len({tuple(product[field] for field in IDENTITY_FIELDS) for product in products}) != len(products):
+			raise ValueError('A planilha contém produtos duplicados; substituição cancelada.')
+
 	connection = psycopg2.connect(load_database_url())
 	inserted_count = 0
 	updated_count = 0
+	removed_product_count = 0
+	removed_movement_count = 0
 
 	try:
 		with connection:
 			with connection.cursor() as cursor:
-				cursor.execute('SELECT id, fonte, secao, produto, modelo, cor, tamanho FROM estoque FOR UPDATE')
 				exact_index: dict[tuple[object, ...], list[int]] = {}
 				variant_index: dict[tuple[str, ...], list[int]] = {}
-				for row in cursor.fetchall():
-					product_id, *identity_values = row
-					exact_key = tuple(identity_values)
-					variant_key = tuple(normalize_header(value or '') for value in identity_values[2:])
-					exact_index.setdefault(exact_key, []).append(product_id)
-					variant_index.setdefault(variant_key, []).append(product_id)
+				if args.replace:
+					cursor.execute('SELECT COUNT(*)::int FROM estoque')
+					removed_product_count = cursor.fetchone()[0]
+					cursor.execute('SELECT COUNT(*)::int FROM stock_movements')
+					removed_movement_count = cursor.fetchone()[0]
+					cursor.execute('TRUNCATE TABLE stock_movements, estoque RESTART IDENTITY')
+				else:
+					cursor.execute('SELECT id, fonte, secao, produto, modelo, cor, tamanho FROM estoque FOR UPDATE')
+					for row in cursor.fetchall():
+						product_id, *identity_values = row
+						exact_key = tuple(identity_values)
+						variant_key = tuple(normalize_header(value or '') for value in identity_values[2:])
+						exact_index.setdefault(exact_key, []).append(product_id)
+						variant_index.setdefault(variant_key, []).append(product_id)
 
 				for product in products:
+					if args.replace:
+						insert_fields = [*PRODUCT_FIELDS, 'unit_price']
+						columns = ', '.join(insert_fields)
+						placeholders = ', '.join(['%s'] * len(insert_fields))
+						values = tuple(product[field] for field in insert_fields)
+						cursor.execute(
+							f'INSERT INTO estoque ({columns}) VALUES ({placeholders})',
+							values,
+						)
+						inserted_count += 1
+						continue
+
 					identity_values = tuple(product[field] for field in IDENTITY_FIELDS)
 					exact_key = identity_values
 					variant_key = tuple(normalize_header(product[field] or '') for field in VARIANT_FIELDS)
@@ -341,7 +414,10 @@ def main() -> None:
 							'por produto, modelo, cor e tamanho; a importação foi cancelada.'
 						)
 					existing_id = matches[0] if matches else None
-					values = tuple(product[field] for field in PRODUCT_FIELDS)
+					update_fields = list(PRODUCT_FIELDS)
+					if product['unit_price'] is not None:
+						update_fields.append('unit_price')
+					values = tuple(product[field] for field in update_fields)
 					if existing_id is not None:
 						cursor.execute(
 							'SELECT 1 FROM stock_movements WHERE product_id = %s LIMIT 1',
@@ -352,15 +428,15 @@ def main() -> None:
 								f'O produto {product["produto"]!r} já possui movimentações; '
 								'para não divergir o histórico, a importação foi cancelada.'
 							)
-						set_clause = ', '.join(f'{field} = %s' for field in PRODUCT_FIELDS)
+						set_clause = ', '.join(f'{field} = %s' for field in update_fields)
 						cursor.execute(
 							f'UPDATE estoque SET {set_clause}, updated_at = NOW() WHERE id = %s',
 							(*values, existing_id),
 						)
 						updated_count += 1
 					else:
-						columns = ', '.join(PRODUCT_FIELDS)
-						placeholders = ', '.join(['%s'] * len(PRODUCT_FIELDS))
+						columns = ', '.join(update_fields)
+						placeholders = ', '.join(['%s'] * len(update_fields))
 						cursor.execute(
 							f'INSERT INTO estoque ({columns}) VALUES ({placeholders}) RETURNING id',
 							values,
@@ -376,6 +452,11 @@ def main() -> None:
 			f'Importacao concluida: {len(products)} linhas processadas '
 			f'({inserted_count} novos, {updated_count} atualizados) em estoque.'
 		)
+		if args.replace:
+			print(
+				f'Catalogo anterior substituido: {removed_product_count} produtos e '
+				f'{removed_movement_count} movimentacoes removidos.'
+			)
 	finally:
 		connection.close()
 

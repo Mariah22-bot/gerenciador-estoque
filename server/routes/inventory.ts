@@ -117,7 +117,7 @@ inventoryRouter.get('/movements', async (_request, response) => {
 });
 
 inventoryRouter.post('/products', async (request, response) => {
-  const { fonte = 'VARIADOS', secao, produto, modelo, cor, tamanho, quantity = 0, unidade = 'un', tecidoComposicao, item, medida, observacoes } = request.body as {
+  const { fonte = 'VARIADOS', secao, produto, modelo, cor, tamanho, quantity = 0, unitPrice = 0, unidade = 'un', tecidoComposicao, item, medida, observacoes } = request.body as {
     fonte?: string;
     secao?: string;
     produto?: string;
@@ -125,6 +125,7 @@ inventoryRouter.post('/products', async (request, response) => {
     cor?: string;
     tamanho?: string;
     quantity?: number;
+    unitPrice?: number;
     unidade?: string;
     tecidoComposicao?: string;
     item?: string;
@@ -137,10 +138,15 @@ inventoryRouter.post('/products', async (request, response) => {
     return;
   }
 
+  if (!Number.isFinite(unitPrice) || unitPrice < 0) {
+    response.status(400).json({ error: 'O preço deve ser um número não negativo.' });
+    return;
+  }
+
   try {
     const result = await pool.query(`
-      INSERT INTO estoque (fonte, secao, produto, quantidade, unidade, modelo, cor, tamanho, tecido_composicao, item, medida, observacoes)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+      INSERT INTO estoque (fonte, secao, produto, quantidade, unit_price, unidade, modelo, cor, tamanho, tecido_composicao, item, medida, observacoes)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
       RETURNING id,
                 COALESCE(sku, CAST(id AS VARCHAR(80))) AS sku,
                 COALESCE(produto, 'Sem descrição') AS name,
@@ -149,7 +155,7 @@ inventoryRouter.post('/products', async (request, response) => {
                 unit_price,
                 minimum_quantity,
                 fonte, secao, COALESCE(produto, 'Sem descrição') AS produto, modelo, cor, tamanho, unidade, tecido_composicao, item, medida, observacoes
-    `, [fonte.trim(), secao?.trim() ?? null, produto.trim(), quantity, unidade.trim(), modelo?.trim() ?? null, cor?.trim() ?? null, tamanho?.trim() ?? null, tecidoComposicao?.trim() ?? null, item?.trim() ?? null, medida?.trim() ?? null, observacoes?.trim() ?? null]);
+    `, [fonte.trim(), secao?.trim() ?? null, produto.trim(), quantity, unitPrice, unidade.trim(), modelo?.trim() ?? null, cor?.trim() ?? null, tamanho?.trim() ?? null, tecidoComposicao?.trim() ?? null, item?.trim() ?? null, medida?.trim() ?? null, observacoes?.trim() ?? null]);
 
     response.status(201).json(result.rows[0]);
   } catch {
@@ -159,7 +165,7 @@ inventoryRouter.post('/products', async (request, response) => {
 
 inventoryRouter.put('/products/:id', async (request, response) => {
   const productId = Number(request.params.id);
-  const { fonte = 'VARIADOS', secao, produto, modelo, cor, tamanho, quantity = 0, unidade = 'un', tecidoComposicao, item, medida, observacoes } = request.body as {
+  const { fonte = 'VARIADOS', secao, produto, modelo, cor, tamanho, quantity = 0, unitPrice = 0, unidade = 'un', tecidoComposicao, item, medida, observacoes } = request.body as {
     fonte?: string;
     secao?: string;
     produto?: string;
@@ -167,6 +173,7 @@ inventoryRouter.put('/products/:id', async (request, response) => {
     cor?: string;
     tamanho?: string;
     quantity?: number;
+    unitPrice?: number;
     unidade?: string;
     tecidoComposicao?: string;
     item?: string;
@@ -184,13 +191,18 @@ inventoryRouter.put('/products/:id', async (request, response) => {
     return;
   }
 
+  if (!Number.isFinite(unitPrice) || unitPrice < 0) {
+    response.status(400).json({ error: 'O preço deve ser um número não negativo.' });
+    return;
+  }
+
   try {
     const result = await pool.query(`
       UPDATE estoque
         SET fonte = $1, secao = $2, produto = $3, modelo = $4, cor = $5,
-          tamanho = $6, quantidade = $7, unidade = $8, tecido_composicao = $9,
-          item = $10, medida = $11, observacoes = $12, updated_at = NOW()
-        WHERE id = $13
+          tamanho = $6, quantidade = $7, unit_price = $8, unidade = $9, tecido_composicao = $10,
+          item = $11, medida = $12, observacoes = $13, updated_at = NOW()
+        WHERE id = $14
       RETURNING id,
                 COALESCE(sku, CAST(id AS VARCHAR(80))) AS sku,
                 COALESCE(produto, 'Sem descrição') AS name,
@@ -199,7 +211,7 @@ inventoryRouter.put('/products/:id', async (request, response) => {
                 unit_price,
                 minimum_quantity,
                 fonte, secao, COALESCE(produto, 'Sem descrição') AS produto, modelo, cor, tamanho, unidade, tecido_composicao, item, medida, observacoes
-    `, [fonte.trim(), secao?.trim() ?? null, produto.trim(), modelo?.trim() ?? null, cor?.trim() ?? null, tamanho?.trim() ?? null, quantity, unidade.trim(), tecidoComposicao?.trim() ?? null, item?.trim() ?? null, medida?.trim() ?? null, observacoes?.trim() ?? null, productId]);
+    `, [fonte.trim(), secao?.trim() ?? null, produto.trim(), modelo?.trim() ?? null, cor?.trim() ?? null, tamanho?.trim() ?? null, quantity, unitPrice, unidade.trim(), tecidoComposicao?.trim() ?? null, item?.trim() ?? null, medida?.trim() ?? null, observacoes?.trim() ?? null, productId]);
 
     if (result.rowCount === 0) {
       response.status(404).json({ error: 'Produto não encontrado.' });

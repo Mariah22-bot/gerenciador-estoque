@@ -18,6 +18,8 @@ A API ficará disponível em `http://localhost:3000`. O endpoint `GET /api/healt
 
 `npm run db:init` aplica o esquema em uma transação e não apaga tabelas. Se encontrar o esquema antigo (`products`), migra os produtos e as movimentações para `estoque` e renomeia a tabela original para `products_legacy_archive`, mantendo os dados antigos. SKUs, preços e quantidades mínimas são preservados. Se `products` e `estoque` já tiverem dados ao mesmo tempo, a inicialização é cancelada para evitar uma mesclagem ambígua; faça backup e resolva essa situação antes de continuar.
 
+Para substituir o catálogo pela planilha padronizada atual, faça um backup do banco e execute `python importar_excel.py --replace`. Esse modo só aceita exatamente 252 produtos com preço e sem chaves duplicadas. Ele substitui também as movimentações ativas, pois elas dependem dos IDs dos produtos antigos; o backup preserva o estado anterior.
+
 ## Frontend
 
 Inicie o frontend com `npm run dev`.

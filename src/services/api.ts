@@ -51,6 +51,7 @@ export type ProductPayload = {
   cor?: string;
   tamanho?: string;
   quantity?: number;
+  unitPrice?: number;
   unidade?: string;
   tecidoComposicao?: string;
   item?: string;
