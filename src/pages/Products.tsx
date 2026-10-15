@@ -262,7 +262,7 @@ export default function Products(): JSX.Element {
                         <table className="w-full min-w-[1280px] text-left text-[10px] text-slate-600">
                             <thead className="border-b border-slate-200 bg-slate-50 text-[9px] text-slate-700">
                                 <tr>
-                                    <th className="px-3 py-2">Fonte / seção</th>
+                                    <th className="px-3 py-2">Código / seção</th>
                                     <th className="px-3 py-2">Produto</th>
                                     <th className="px-3 py-2">Modelo</th>
                                     <th className="px-3 py-2">Cor</th>
@@ -279,7 +279,7 @@ export default function Products(): JSX.Element {
                                 {filteredProducts.map((product) => (
                                     <tr key={product.id} className="border-b border-slate-100 align-top hover:bg-slate-50">
                                         <td className="px-3 py-2">
-                                            <div className="font-medium text-slate-700">{product.fonte || '—'}</div>
+                                            <div className="font-medium text-slate-700">{product.sku}</div>
                                             <div className="mt-0.5 max-w-[150px] text-[9px] text-slate-400">{product.secao || 'Sem seção'}</div>
                                         </td>
                                         <td className="max-w-[230px] px-3 py-2 font-medium text-slate-700">{product.produto}</td>
