@@ -153,6 +153,8 @@ export default function Products(): JSX.Element {
     const [onlyEmpty, setOnlyEmpty] = useState(false);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [actionError, setActionError] = useState<string | null>(null);
+    const [deletingProductId, setDeletingProductId] = useState<number | null>(null);
     const [showForm, setShowForm] = useState(false);
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
@@ -207,9 +209,17 @@ export default function Products(): JSX.Element {
 
     async function deleteProduct(product: Product): Promise<void> {
         if (!window.confirm(`Deseja excluir o item “${product.produto}”?`)) return;
-        await inventoryApi.deleteProduct(product.id);
-        notifyInventoryRefresh();
-        await loadProducts();
+        setActionError(null);
+        setDeletingProductId(product.id);
+        try {
+            await inventoryApi.deleteProduct(product.id);
+            notifyInventoryRefresh();
+            await loadProducts();
+        } catch (deleteError: unknown) {
+            setActionError(deleteError instanceof Error ? deleteError.message : 'Não foi possível excluir o produto.');
+        } finally {
+            setDeletingProductId(null);
+        }
     }
 
     return (
@@ -244,6 +254,7 @@ export default function Products(): JSX.Element {
                     <span className="self-center text-[10px] text-slate-500">{filteredProducts.length} de {products.length}</span>
                 </div>
 
+                {actionError && <p role="alert" className="mt-3 rounded border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-600">{actionError}</p>}
                 {loading && <p className="py-8 text-center text-xs text-slate-500">Carregando estoque...</p>}
                 {error && <p className="py-8 text-center text-xs text-rose-500">{error}</p>}
                 {!loading && !error && (
@@ -282,7 +293,9 @@ export default function Products(): JSX.Element {
                                         <td className="px-3 py-2">
                                             <div className="flex justify-end gap-1">
                                                 <button type="button" onClick={() => { setEditingProduct(product); setShowForm(true); }} className="rounded border border-slate-200 px-2 py-1 text-[9px] text-slate-600">Editar</button>
-                                                <button type="button" onClick={() => void deleteProduct(product)} className="rounded border border-rose-200 bg-rose-50 px-2 py-1 text-[9px] text-rose-600">Excluir</button>
+                                                <button type="button" onClick={() => void deleteProduct(product)} disabled={deletingProductId !== null} className="rounded border border-rose-200 bg-rose-50 px-2 py-1 text-[9px] text-rose-600 disabled:cursor-wait disabled:opacity-60">
+                                                    {deletingProductId === product.id ? 'Excluindo...' : 'Excluir'}
+                                                </button>
                                             </div>
                                         </td>
                                     </tr>

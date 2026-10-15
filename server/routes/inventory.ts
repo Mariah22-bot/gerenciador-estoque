@@ -244,7 +244,7 @@ inventoryRouter.delete('/products/:id', async (request, response) => {
 
     if (Number(product.rows[0].quantidade) > 0 || Number(movementCount.rows[0].total) > 0) {
       response.status(409).json({
-        error: 'Produto com estoque ou movimentações não pode ser excluído. Zere o estoque e remova os registros antes de apagar.',
+        error: 'Produto com estoque ou histórico de movimentações não pode ser excluído. Zere o estoque e mantenha produtos com histórico para preservar os registros.',
       });
       return;
     }
@@ -301,6 +301,68 @@ inventoryRouter.post('/movements', async (request, response) => {
   } catch {
     await client.query('ROLLBACK');
     response.status(500).json({ error: 'Não foi possível registrar a movimentação.' });
+  } finally {
+    client.release();
+  }
+});
+
+inventoryRouter.delete('/movements/:id', async (request, response) => {
+  const movementId = Number(request.params.id);
+
+  if (!Number.isInteger(movementId) || movementId <= 0) {
+    response.status(400).json({ error: 'Identificador da movimentação inválido.' });
+    return;
+  }
+
+  const client = await pool.connect();
+
+  try {
+    await client.query('BEGIN');
+    const movement = await client.query(
+      'SELECT product_id, type, quantity FROM stock_movements WHERE id = $1 FOR UPDATE',
+      [movementId],
+    );
+
+    if (movement.rowCount === 0) {
+      await client.query('ROLLBACK');
+      response.status(404).json({ error: 'Movimentação não encontrada.' });
+      return;
+    }
+
+    const { product_id: productId, type, quantity } = movement.rows[0] as {
+      product_id: number;
+      type: 'entrada' | 'saida';
+      quantity: number;
+    };
+    const product = await client.query('SELECT quantidade FROM estoque WHERE id = $1 FOR UPDATE', [productId]);
+
+    if (product.rowCount === 0) {
+      await client.query('ROLLBACK');
+      response.status(404).json({ error: 'Produto da movimentação não encontrado.' });
+      return;
+    }
+
+    const currentQuantity = Number(product.rows[0].quantidade ?? 0);
+    if (type === 'entrada' && currentQuantity < Number(quantity)) {
+      await client.query('ROLLBACK');
+      response.status(409).json({
+        error: 'Esta entrada não pode ser removida porque o estoque atual é menor que a quantidade registrada.',
+      });
+      return;
+    }
+
+    const change = type === 'entrada' ? -Number(quantity) : Number(quantity);
+    await client.query(
+      'UPDATE estoque SET quantidade = COALESCE(quantidade, 0) + $1, updated_at = NOW() WHERE id = $2',
+      [change, productId],
+    );
+    await client.query('DELETE FROM stock_movements WHERE id = $1', [movementId]);
+    await client.query('COMMIT');
+
+    response.json({ success: true });
+  } catch {
+    await client.query('ROLLBACK');
+    response.status(500).json({ error: 'Não foi possível excluir a movimentação.' });
   } finally {
     client.release();
   }

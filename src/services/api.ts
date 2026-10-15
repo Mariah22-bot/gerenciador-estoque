@@ -98,5 +98,8 @@ export const inventoryApi = {
     method: 'POST',
     body: JSON.stringify(payload),
   }),
+  deleteMovement: (id: number) => request<{ success: true }>(`/api/movements/${id}`, {
+    method: 'DELETE',
+  }),
   getAnalytics: () => request<AnalyticsData>('/api/analytics'),
 };

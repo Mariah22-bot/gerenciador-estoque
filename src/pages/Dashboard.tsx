@@ -53,6 +53,12 @@ export default function Dashboard(): JSX.Element {
         await loadDashboard();
     }
 
+    async function handleMovementDelete(movementId: number): Promise<void> {
+        await inventoryApi.deleteMovement(movementId);
+        notifyInventoryRefresh();
+        await loadDashboard();
+    }
+
     const capital = Number(summary.invested_capital).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     const balance = summary.entries - summary.exits;
 
@@ -65,7 +71,13 @@ export default function Dashboard(): JSX.Element {
                 <StatCard title="Entradas vs. saídas" value={`${summary.entries} / ${summary.exits}`} change={`Saldo ${balance >= 0 ? '+' : ''}${balance}`} isPositive={balance >= 0} icon="exchange" />
             </div>
             <div className="grid grid-cols-1 gap-3 lg:grid-cols-3"><div className="lg:col-span-2"><AnalyticsChart /></div><div className="rounded-lg border border-slate-200 bg-white p-3"><h2 className="text-xs font-semibold text-slate-800">Mais vendidos vs. mais parados</h2><p className="mb-2 text-[9px] text-slate-500">Os dados serão calculados a partir das movimentações.</p><p className="py-8 text-center text-[9px] text-slate-400">Ainda não há movimentações cadastradas.</p></div></div>
-            <UserTable movements={movements} loading={loading} error={error} onNewMovement={() => setShowMovementModal(true)} />
+            <UserTable
+                movements={movements}
+                loading={loading}
+                error={error}
+                onNewMovement={() => setShowMovementModal(true)}
+                onDeleteMovement={handleMovementDelete}
+            />
             {showMovementModal && <MovementModal products={products} onClose={() => setShowMovementModal(false)} onSubmit={handleMovementSubmit} />}
         </div>
     );
