@@ -259,8 +259,7 @@ export default function Products(): JSX.Element {
                                     <th className="px-3 py-2 text-right">Quantidade</th>
                                     <th className="px-3 py-2 text-right">Preço unitário</th>
                                     <th className="px-3 py-2">Un.</th>
-                                    <th className="px-3 py-2">Composição / medida</th>
-                                    <th className="px-3 py-2">Observações</th>
+                                    <th className="px-3 py-2">Composição</th>
                                     <th className="px-3 py-2 text-right">Ações</th>
                                 </tr>
                             </thead>
@@ -280,7 +279,6 @@ export default function Products(): JSX.Element {
                                         <td className="px-3 py-2 text-right font-medium text-slate-700">{formatPrice(product.unit_price)}</td>
                                         <td className="px-3 py-2">{product.unidade}</td>
                                         <td className="max-w-[180px] px-3 py-2">{product.tecido_composicao || product.medida || '—'}</td>
-                                        <td className="max-w-[180px] px-3 py-2 text-slate-500">{product.observacoes || '—'}</td>
                                         <td className="px-3 py-2">
                                             <div className="flex justify-end gap-1">
                                                 <button type="button" onClick={() => { setEditingProduct(product); setShowForm(true); }} className="rounded border border-slate-200 px-2 py-1 text-[9px] text-slate-600">Editar</button>
