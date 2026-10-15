@@ -5,7 +5,7 @@ import AnalyticsChart from '../components/AnalyticsChart';
 import MovementModal from '../components/MovementModal';
 import { inventoryApi, notifyInventoryRefresh, type DashboardSummary, type Movement, type Product } from '../services/api';
 
-const emptySummary: DashboardSummary = { product_count: 0, inactive_product_count: 0, invested_capital: '0', entries: 0, exits: 0 };
+const emptySummary: DashboardSummary = { product_count: 0, products_without_turnover_count: 0, invested_capital: '0', entries: 0, exits: 0 };
 
 export default function Dashboard(): JSX.Element {
     const [summary, setSummary] = useState<DashboardSummary>(emptySummary);
@@ -66,7 +66,15 @@ export default function Dashboard(): JSX.Element {
         <div className="mx-auto max-w-[1120px] space-y-3">
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
                 <StatCard title="Produtos cadastrados" value={String(summary.product_count)} change="Dados reais" isPositive={true} icon="box" />
-                <StatCard title="Produtos sem giro" value={String(summary.inactive_product_count)} change="Estoque zerado" isPositive={false} icon="refresh" />
+                <StatCard
+                    title="Produtos sem giro"
+                    value={String(summary.products_without_turnover_count)}
+                    change="Sem saídas"
+                    isPositive={false}
+                    icon="refresh"
+                    comparisonLabel=""
+                    detail="Sem movimentação de saída registrada"
+                />
                 <StatCard title="Capital imobilizado" value={capital} change="Valor atual" isPositive={true} icon="box" />
                 <StatCard title="Entradas vs. saídas" value={`${summary.entries} / ${summary.exits}`} change={`Saldo ${balance >= 0 ? '+' : ''}${balance}`} isPositive={balance >= 0} icon="exchange" />
             </div>

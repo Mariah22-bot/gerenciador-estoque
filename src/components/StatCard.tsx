@@ -2,7 +2,15 @@ import type { JSX } from 'react';
 import type { StatCardProps } from '../types/dashboard';
 import Icon from './Icon';
 
-export default function StatCard({ title, value, change, isPositive, icon }: StatCardProps): JSX.Element {
+export default function StatCard({
+    title,
+    value,
+    change,
+    isPositive,
+    icon,
+    comparisonLabel = 'vs. mês anterior',
+    detail,
+}: StatCardProps): JSX.Element {
     return (
         <div className={`rounded-lg p-3 border border-slate-200 bg-white min-w-0 ${!isPositive ? 'border-t-rose-100' : ''}`}>
             <div>
@@ -12,9 +20,9 @@ export default function StatCard({ title, value, change, isPositive, icon }: Sta
                     <span className={`rounded-full px-1.5 py-0.5 text-[8px] ${isPositive ? 'bg-slate-100 text-slate-700' : 'bg-rose-50 text-rose-500'}`}>
                         {isPositive ? '↗' : '↘'} {change}
                     </span>
-                    <span className="text-[8px] text-slate-400">vs. mês anterior</span>
+                    {comparisonLabel && <span className="text-[8px] text-slate-400">{comparisonLabel}</span>}
                 </div>
-                <p className="mt-2 text-[8px] text-slate-500">{isPositive ? '1.415 ativos · 67 pausados no anúncio' : '4.5% do catálogo imobilizado'}</p>
+                <p className="mt-2 text-[8px] text-slate-500">{detail ?? (isPositive ? '1.415 ativos · 67 pausados no anúncio' : '4.5% do catálogo imobilizado')}</p>
             </div>
         </div>
     );

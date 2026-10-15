@@ -61,7 +61,14 @@ inventoryRouter.get('/dashboard/summary', async (_request, response) => {
     const result = await pool.query(`
       SELECT
         COUNT(*)::int AS product_count,
-        COUNT(*) FILTER (WHERE COALESCE(quantidade, 0) = 0)::int AS inactive_product_count,
+        COUNT(*) FILTER (
+          WHERE NOT EXISTS (
+            SELECT 1
+            FROM stock_movements
+            WHERE stock_movements.product_id = estoque.id
+              AND stock_movements.type = 'saida'
+          )
+        )::int AS products_without_turnover_count,
         COALESCE(SUM(COALESCE(quantidade, 0) * unit_price), 0)::numeric AS invested_capital,
         COALESCE((SELECT SUM(quantity) FROM stock_movements WHERE type = 'entrada'), 0)::int AS entries,
         COALESCE((SELECT SUM(quantity) FROM stock_movements WHERE type = 'saida'), 0)::int AS exits
