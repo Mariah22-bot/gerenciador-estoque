@@ -1,7 +1,11 @@
 import type { JSX } from 'react';
 import Icon from './Icon';
 
-export default function Header(): JSX.Element {
+interface HeaderProps {
+    onLogout: () => void;
+}
+
+export default function Header({ onLogout }: HeaderProps): JSX.Element {
     return (
         <header className="h-[42px] flex items-center justify-between bg-black px-4 text-white">
             <div />
@@ -19,6 +23,13 @@ export default function Header(): JSX.Element {
                     <div className="h-5 w-5 rounded-full bg-[#087f8c] text-[8px] flex items-center justify-center">MFF</div>
                     <span className="text-[9px]">MFF ENXOVAIS</span>
                 </div>
+                <button
+                    type="button"
+                    onClick={onLogout}
+                    className="rounded border border-slate-700 px-2 py-1 text-[9px] text-slate-200 transition hover:bg-slate-800"
+                >
+                    Sair
+                </button>
             </div>
         </header>
     );

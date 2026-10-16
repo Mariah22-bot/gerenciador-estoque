@@ -65,6 +65,16 @@ export function notifyInventoryRefresh(): void {
   }
 }
 
+export class ApiError extends Error {
+  readonly status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+  }
+}
+
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const response = await fetch(path, {
     headers: { 'Content-Type': 'application/json' },
@@ -73,11 +83,27 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 
   if (!response.ok) {
     const body = await response.json().catch(() => ({})) as { error?: string };
-    throw new Error(body.error ?? 'Não foi possível concluir a requisição.');
+    if (response.status === 401 && !path.startsWith('/api/auth/')) {
+      window.dispatchEvent(new Event('auth:unauthorized'));
+    }
+    throw new ApiError(body.error ?? 'Não foi possível concluir a requisição.', response.status);
+  }
+
+  if (response.status === 204) {
+    return undefined as T;
   }
 
   return response.json() as Promise<T>;
 }
+
+export const authApi = {
+  getSession: () => request<{ authenticated: true }>('/api/auth/session'),
+  login: (username: string, password: string) => request<{ authenticated: true }>('/api/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ username, password }),
+  }),
+  logout: () => request<void>('/api/auth/logout', { method: 'POST' }),
+};
 
 export const inventoryApi = {
   getSummary: () => request<DashboardSummary>('/api/dashboard/summary'),
