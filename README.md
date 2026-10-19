@@ -5,7 +5,7 @@ Dashboard de monitoramento do giro de estoque com React, TailwindCSS, Express, T
 ## Backend local
 
 1. Instale o PostgreSQL e crie um banco chamado `gerenciador_estoque`.
-2. Copie `.env.example` para `.env` e configure `DATABASE_URL`, `APP_USERNAME` e `APP_PASSWORD` com os valores da empresa. Gere um segredo aleatório de pelo menos 32 caracteres para `SESSION_SECRET`; por exemplo, execute `node -e "console.log(require('node:crypto').randomBytes(48).toString('base64'))"` e use o resultado. Não compartilhe nem versione o arquivo `.env`.
+2. Configure a variável `DATABASE_URL` no arquivo `.env` com os dados de conexão do PostgreSQL. Não compartilhe nem versione esse arquivo.
 3. Inicialize as tabelas:
 
   `npm run db:init`
@@ -15,8 +15,6 @@ Dashboard de monitoramento do giro de estoque com React, TailwindCSS, Express, T
   `npm run server:dev`
 
 A API ficará disponível em `http://localhost:3000`. O endpoint `GET /api/health` verifica a conexão com o banco. Os endpoints `GET /api/products` e `GET /api/movements` consultam os dados de estoque.
-
-O aplicativo solicita um único usuário e uma única senha, definidos no servidor por `APP_USERNAME` e `APP_PASSWORD`. Após o login, a sessão expira em 8 horas e é armazenada em um cookie `HttpOnly`; a API de estoque exige essa sessão. Em produção, publique o aplicativo por HTTPS para que o cookie também seja marcado como seguro.
 
 `npm run db:init` aplica o esquema em uma transação e não apaga tabelas. Se encontrar o esquema antigo (`products`), migra os produtos e as movimentações para `estoque` e renomeia a tabela original para `products_legacy_archive`, mantendo os dados antigos. SKUs, preços e quantidades mínimas são preservados. Se `products` e `estoque` já tiverem dados ao mesmo tempo, a inicialização é cancelada para evitar uma mesclagem ambígua; faça backup e resolva essa situação antes de continuar.
 
