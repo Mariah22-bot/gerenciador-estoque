@@ -18,7 +18,7 @@ export default function Settings(): JSX.Element {
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <h1 className="text-lg font-semibold text-slate-800">Configurações</h1>
-                    <p className="text-xs text-slate-500">Ajuste os dados da loja, alertas e integrações do estoque.</p>
+                    <p className="text-xs text-slate-500">Ajuste os dados da loja e as preferências de alertas do estoque.</p>
                 </div>
                 <button type="button" className="rounded bg-[#007d8b] px-3 py-2 text-[10px] font-medium text-white hover:bg-[#006c78]">
                     Salvar alterações
@@ -31,7 +31,7 @@ export default function Settings(): JSX.Element {
                     <div className="mt-4 grid gap-3 md:grid-cols-2">
                         <label className="text-[10px] font-medium text-slate-700">
                             Nome da loja
-                            <input defaultValue="Estoque ML" className="mt-1 w-full rounded border border-slate-200 px-2 py-2 text-xs text-slate-700 outline-none focus:border-[#007d8b]" />
+                            <input defaultValue="Minha loja" className="mt-1 w-full rounded border border-slate-200 px-2 py-2 text-xs text-slate-700 outline-none focus:border-[#007d8b]" />
                         </label>
                         <label className="text-[10px] font-medium text-slate-700">
                             CNPJ
@@ -61,12 +61,8 @@ export default function Settings(): JSX.Element {
 
                 <aside className="space-y-4">
                     <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-                        <h2 className="text-sm font-semibold text-slate-800">Sincronização</h2>
+                        <h2 className="text-sm font-semibold text-slate-800">Notificações</h2>
                         <div className="mt-3 space-y-3 text-[10px] text-slate-600">
-                            <div className="flex items-center justify-between rounded border border-slate-200 bg-slate-50 px-2 py-2">
-                                <span>Mercado Livre</span>
-                                <Toggle checked={true} />
-                            </div>
                             <div className="flex items-center justify-between rounded border border-slate-200 bg-slate-50 px-2 py-2">
                                 <span>Email de alertas</span>
                                 <Toggle checked={true} />
@@ -87,7 +83,7 @@ export default function Settings(): JSX.Element {
                             </label>
                             <label className="block text-[10px] font-medium text-slate-700">
                                 Email para alertas
-                                <input defaultValue="financeiro@estoqueml.com" className="mt-1 w-full rounded border border-slate-200 px-2 py-2 text-xs text-slate-700 outline-none focus:border-[#007d8b]" />
+                                <input placeholder="financeiro@empresa.com.br" className="mt-1 w-full rounded border border-slate-200 px-2 py-2 text-xs text-slate-700 outline-none focus:border-[#007d8b]" />
                             </label>
                         </div>
                     </section>

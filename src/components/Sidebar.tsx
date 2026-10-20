@@ -21,7 +21,7 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps): JSX.
             <div className="flex w-full items-center lg:block">
                 <div className="mb-8 hidden items-center gap-2 px-1 text-white lg:flex">
                     <div className="h-7 w-7 rounded-md bg-[#f5a400] text-[#13232d] flex items-center justify-center font-black text-xs">E</div>
-                    <div className="leading-tight"><strong className="block text-[11px]">Estoque ML</strong><span className="text-[8px] text-slate-400">Loja Oficial</span></div>
+                    <div className="leading-tight"><strong className="block text-[11px]">Estoque</strong><span className="text-[8px] text-slate-400">Gestão de estoque</span></div>
                 </div>
                 <p className="mb-2 hidden px-1 text-[8px] uppercase tracking-wider text-slate-500 lg:block">Operação</p>
                 <nav className="flex w-full items-center justify-around lg:block lg:space-y-0.5">
@@ -41,9 +41,6 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps): JSX.
                 </nav>
             </div>
 
-            <div className="hidden border-t border-slate-700 px-1 pt-3 lg:block">
-                <div className="flex items-center gap-2 text-[9px]"><span className="h-5 w-5 rounded bg-[#263b47] flex items-center justify-center text-[#f5a400]">•</span><div><span className="block text-slate-300">API Mercado Livre</span><span className="text-[8px] text-slate-500">Sincronizado</span></div><span className="ml-auto text-slate-500">⌄</span></div>
-            </div>
         </aside>
     );
 }
