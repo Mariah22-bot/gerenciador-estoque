@@ -196,13 +196,21 @@ inventoryRouter.post('/products', async (request, response) => {
     return;
   }
 
+  if (!Number.isInteger(quantity) || quantity < 0) {
+    response.status(400).json({ error: 'A quantidade deve ser um número inteiro não negativo.' });
+    return;
+  }
+
   if (!Number.isFinite(unitPrice) || unitPrice < 0) {
     response.status(400).json({ error: 'O preço deve ser um número não negativo.' });
     return;
   }
 
+  const client = await pool.connect();
+
   try {
-    const result = await pool.query(`
+    await client.query('BEGIN');
+    const result = await client.query(`
       INSERT INTO estoque (secao, produto, quantidade, unit_price, unidade, modelo, cor, tamanho, tecido_composicao, item, medida, observacoes)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
       RETURNING id,
@@ -215,9 +223,20 @@ inventoryRouter.post('/products', async (request, response) => {
                 secao, COALESCE(produto, 'Sem descrição') AS produto, modelo, cor, tamanho, unidade, tecido_composicao, item, medida, observacoes
     `, [secao?.trim() ?? null, produto.trim(), quantity, unitPrice, unidade.trim(), modelo?.trim() ?? null, cor?.trim() ?? null, tamanho?.trim() ?? null, tecidoComposicao?.trim() ?? null, item?.trim() ?? null, medida?.trim() ?? null, observacoes?.trim() ?? null]);
 
+    if (quantity > 0) {
+      await client.query(`
+        INSERT INTO stock_movements (product_id, type, quantity, notes)
+        VALUES ($1, 'entrada', $2, $3)
+      `, [result.rows[0].id, quantity, 'Estoque inicial informado no cadastro do produto.']);
+    }
+
+    await client.query('COMMIT');
     response.status(201).json(result.rows[0]);
   } catch {
+    await client.query('ROLLBACK');
     response.status(500).json({ error: 'Não foi possível cadastrar o produto.' });
+  } finally {
+    client.release();
   }
 });
 
@@ -254,13 +273,34 @@ inventoryRouter.put('/products/:id', async (request, response) => {
     return;
   }
 
+  if (!Number.isInteger(quantity) || quantity < 0) {
+    response.status(400).json({ error: 'A quantidade deve ser um número inteiro não negativo.' });
+    return;
+  }
+
   if (!Number.isFinite(unitPrice) || unitPrice < 0) {
     response.status(400).json({ error: 'O preço deve ser um número não negativo.' });
     return;
   }
 
+  const client = await pool.connect();
+
   try {
-    const result = await pool.query(`
+    await client.query('BEGIN');
+    const current = await client.query(
+      'SELECT COALESCE(quantidade, 0)::int AS quantity FROM estoque WHERE id = $1 FOR UPDATE',
+      [productId],
+    );
+
+    if (current.rowCount === 0) {
+      await client.query('ROLLBACK');
+      response.status(404).json({ error: 'Produto não encontrado.' });
+      return;
+    }
+
+    const previousQuantity = Number(current.rows[0].quantity);
+    const quantityDifference = quantity - previousQuantity;
+    const result = await client.query(`
       UPDATE estoque
         SET sku = COALESCE($1, sku), secao = $2, produto = $3, modelo = $4, cor = $5,
           tamanho = $6, quantidade = $7, unit_price = $8, unidade = $9, tecido_composicao = $10,
@@ -276,18 +316,30 @@ inventoryRouter.put('/products/:id', async (request, response) => {
                 secao, COALESCE(produto, 'Sem descrição') AS produto, modelo, cor, tamanho, unidade, tecido_composicao, item, medida, observacoes
     `, [sku?.trim() ?? null, secao?.trim() ?? null, produto.trim(), modelo?.trim() ?? null, cor?.trim() ?? null, tamanho?.trim() ?? null, quantity, unitPrice, unidade.trim(), tecidoComposicao?.trim() ?? null, item?.trim() ?? null, medida?.trim() ?? null, observacoes?.trim() ?? null, productId]);
 
-    if (result.rowCount === 0) {
-      response.status(404).json({ error: 'Produto não encontrado.' });
-      return;
+    if (quantityDifference !== 0) {
+      const type = quantityDifference > 0 ? 'entrada' : 'saida';
+      await client.query(`
+        INSERT INTO stock_movements (product_id, type, quantity, notes)
+        VALUES ($1, $2, $3, $4)
+      `, [
+        productId,
+        type,
+        Math.abs(quantityDifference),
+        'Ajuste de estoque realizado pela edição do produto.',
+      ]);
     }
 
+    await client.query('COMMIT');
     response.json(result.rows[0]);
   } catch (error: unknown) {
+    await client.query('ROLLBACK');
     if (typeof error === 'object' && error !== null && 'code' in error && error.code === '23505') {
       response.status(409).json({ error: 'Este código já está sendo usado por outro produto.' });
       return;
     }
     response.status(500).json({ error: 'Não foi possível atualizar o produto.' });
+  } finally {
+    client.release();
   }
 });
 
