@@ -4,7 +4,6 @@ import Header from './components/Header';
 import Dashboard from './pages/Dashboard';
 import Products from './pages/Products';
 import Analytics from './pages/Analytics';
-import Settings from './pages/Settings';
 import type { TabId } from './types/dashboard';
 
 export default function App(): JSX.Element {
@@ -20,7 +19,6 @@ export default function App(): JSX.Element {
           {activeTab === 'dashboard' && <Dashboard />}
           {activeTab === 'analytics' && <Analytics />}
           {activeTab === 'users' && <Products />}
-          {activeTab === 'settings' && <Settings />}
         </main>
       </div>
     </div>

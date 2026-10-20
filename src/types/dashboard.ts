@@ -16,7 +16,7 @@ export interface StatCardProps {
   detail?: string;
 }
 
-export type TabId = 'dashboard' | 'analytics' | 'users' | 'settings';
+export type TabId = 'dashboard' | 'analytics' | 'users';
 
 export interface SidebarProps {
   activeTab: TabId;

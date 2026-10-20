@@ -13,7 +13,6 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps): JSX.
         { id: 'dashboard', label: 'Dashboard', icon: 'grid' },
         { id: 'analytics', label: 'Curva ABC', icon: 'chart' },
         { id: 'users', label: 'Produtos', icon: 'box' },
-        { id: 'settings', label: 'Configurações', icon: 'settings' },
     ];
 
     return (
