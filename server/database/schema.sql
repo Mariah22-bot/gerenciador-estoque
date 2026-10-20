@@ -119,6 +119,66 @@ END $$;
 CREATE UNIQUE INDEX IF NOT EXISTS idx_estoque_sku_unique
   ON estoque(sku) WHERE sku IS NOT NULL;
 
+CREATE OR REPLACE FUNCTION public.assign_estoque_sku()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  IF NEW.sku IS NULL THEN
+    NEW.sku := CASE
+      WHEN NEW.id < 100 THEN LPAD(NEW.id::TEXT, 3, '0')
+      ELSE NEW.id::TEXT
+    END;
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger
+    WHERE tgname = 'estoque_assign_sku_before_insert'
+      AND tgrelid = 'public.estoque'::REGCLASS
+      AND NOT tgisinternal
+  ) THEN
+    CREATE TRIGGER estoque_assign_sku_before_insert
+      BEFORE INSERT ON public.estoque
+      FOR EACH ROW
+      EXECUTE FUNCTION public.assign_estoque_sku();
+  END IF;
+END;
+$$;
+
+DO $$
+BEGIN
+  IF EXISTS (
+    WITH proposed AS (
+      SELECT CASE
+        WHEN sku IS NULL THEN CASE WHEN id < 100 THEN LPAD(id::TEXT, 3, '0') ELSE id::TEXT END
+        WHEN sku ~ '^[0-9]+$' AND LENGTH(sku) < 3 THEN LPAD(sku, 3, '0')
+        ELSE sku
+      END AS next_sku
+      FROM public.estoque
+    )
+    SELECT next_sku
+    FROM proposed
+    GROUP BY next_sku
+    HAVING COUNT(*) > 1
+  ) THEN
+    RAISE EXCEPTION 'A formatação de SKU causaria códigos duplicados; nenhum código foi alterado.';
+  END IF;
+
+  UPDATE public.estoque
+  SET sku = CASE
+    WHEN sku IS NULL THEN CASE WHEN id < 100 THEN LPAD(id::TEXT, 3, '0') ELSE id::TEXT END
+    WHEN sku ~ '^[0-9]+$' AND LENGTH(sku) < 3 THEN LPAD(sku, 3, '0')
+    ELSE sku
+  END
+  WHERE sku IS NULL OR (sku ~ '^[0-9]+$' AND LENGTH(sku) < 3);
+END;
+$$;
+
 DO $$
 DECLARE
   id_sequence REGCLASS := pg_get_serial_sequence('public.estoque', 'id');

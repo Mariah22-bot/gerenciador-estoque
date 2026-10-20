@@ -7,7 +7,7 @@ inventoryRouter.get('/analytics', async (_request, response) => {
   try {
     const topProducts = await pool.query(`
       SELECT e.produto AS name,
-             COALESCE(e.sku, CAST(e.id AS VARCHAR)) AS sku,
+             COALESCE(e.sku, CASE WHEN e.id < 100 THEN LPAD(e.id::TEXT, 3, '0') ELSE e.id::TEXT END) AS sku,
              COALESCE(SUM(movements.quantity) FILTER (WHERE movements.type = 'saida'), 0)::int AS units_moved
       FROM estoque AS e
       LEFT JOIN stock_movements AS movements
@@ -136,7 +136,7 @@ inventoryRouter.get('/products', async (_request, response) => {
   try {
     const result = await pool.query(`
       SELECT e.id,
-             COALESCE(e.sku, CAST(e.id AS VARCHAR(80))) AS sku,
+             COALESCE(e.sku, CASE WHEN e.id < 100 THEN LPAD(e.id::TEXT, 3, '0') ELSE e.id::TEXT END) AS sku,
              COALESCE(e.produto, 'Sem descrição') AS name,
              COALESCE(e.secao, e.fonte) AS category,
              COALESCE(e.quantidade, 0) AS quantity,
@@ -161,7 +161,7 @@ inventoryRouter.get('/movements', async (_request, response) => {
     const result = await pool.query(`
       SELECT movements.id, movements.type, movements.quantity,
              movements.occurred_at, movements.notes,
-             COALESCE(e.sku, CAST(e.id AS VARCHAR(80))) AS sku,
+             COALESCE(e.sku, CASE WHEN e.id < 100 THEN LPAD(e.id::TEXT, 3, '0') ELSE e.id::TEXT END) AS sku,
              e.produto AS product_name
       FROM stock_movements AS movements
       INNER JOIN estoque AS e ON e.id = movements.product_id
@@ -206,7 +206,7 @@ inventoryRouter.post('/products', async (request, response) => {
       INSERT INTO estoque (fonte, secao, produto, quantidade, unit_price, unidade, modelo, cor, tamanho, tecido_composicao, item, medida, observacoes)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
       RETURNING id,
-                COALESCE(sku, CAST(id AS VARCHAR(80))) AS sku,
+                COALESCE(sku, CASE WHEN id < 100 THEN LPAD(id::TEXT, 3, '0') ELSE id::TEXT END) AS sku,
                 COALESCE(produto, 'Sem descrição') AS name,
                 COALESCE(secao, fonte) AS category,
                 COALESCE(quantidade, 0) AS quantity,
@@ -262,7 +262,7 @@ inventoryRouter.put('/products/:id', async (request, response) => {
           item = $11, medida = $12, observacoes = $13, updated_at = NOW()
         WHERE id = $14
       RETURNING id,
-                COALESCE(sku, CAST(id AS VARCHAR(80))) AS sku,
+                COALESCE(sku, CASE WHEN id < 100 THEN LPAD(id::TEXT, 3, '0') ELSE id::TEXT END) AS sku,
                 COALESCE(produto, 'Sem descrição') AS name,
                 COALESCE(secao, fonte) AS category,
                 COALESCE(quantidade, 0) AS quantity,
