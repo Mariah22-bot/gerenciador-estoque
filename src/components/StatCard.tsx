@@ -9,7 +9,6 @@ export default function StatCard({
     isPositive,
     icon,
     comparisonLabel = 'vs. mês anterior',
-    detail,
 }: StatCardProps): JSX.Element {
     return (
         <div className={`rounded-lg p-3 border border-slate-200 bg-white min-w-0 ${!isPositive ? 'border-t-rose-100' : ''}`}>
