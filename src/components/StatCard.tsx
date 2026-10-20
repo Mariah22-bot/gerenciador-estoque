@@ -22,7 +22,6 @@ export default function StatCard({
                     </span>
                     {comparisonLabel && <span className="text-[11px] text-slate-400">{comparisonLabel}</span>}
                 </div>
-                <p className="mt-2 text-[11px] text-slate-500">{detail ?? (isPositive ? '1.415 ativos · 67 pausados no anúncio' : '4.5% do catálogo imobilizado')}</p>
             </div>
         </div>
     );
