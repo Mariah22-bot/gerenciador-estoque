@@ -191,7 +191,7 @@ export default function Products(): JSX.Element {
     );
     const filteredProducts = useMemo(() => products.filter((product) => {
         const searchable = [
-            product.fonte, product.secao, product.produto, product.modelo, product.cor,
+            product.sku, product.fonte, product.secao, product.produto, product.modelo, product.cor,
             product.tamanho, product.tecido_composicao, product.item, product.medida, product.observacoes,
         ].join(' ').toLowerCase();
         return searchable.includes(search.toLowerCase())
