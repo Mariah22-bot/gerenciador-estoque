@@ -44,6 +44,7 @@ export interface AnalyticsData {
 }
 
 export type ProductPayload = {
+  sku?: string;
   secao?: string;
   produto: string;
   modelo?: string;

@@ -20,8 +20,6 @@ const emptyPayload: ProductPayload = {
     unidade: 'un',
     tecidoComposicao: '',
     item: '',
-    medida: '',
-    observacoes: '',
 };
 
 const currencyFormatter = new Intl.NumberFormat('pt-BR', {
@@ -51,8 +49,6 @@ function ProductForm({ mode, initialProduct, onClose, onSubmit }: ProductFormPro
             unidade: initialProduct.unidade,
             tecidoComposicao: initialProduct.tecido_composicao ?? '',
             item: initialProduct.item ?? '',
-            medida: initialProduct.medida ?? '',
-            observacoes: initialProduct.observacoes ?? '',
         } : emptyPayload);
     }, [initialProduct]);
 
@@ -91,13 +87,13 @@ function ProductForm({ mode, initialProduct, onClose, onSubmit }: ProductFormPro
                 <div className="mb-4 flex items-start justify-between">
                     <div>
                         <h2 className="text-base font-semibold text-slate-800">
-                            {mode === 'create' ? 'Cadastrar item' : 'Editar item'}
+                            {mode === 'create' ? 'Cadastrar item' : 'Editar'}
                         </h2>
-                        <p className="mt-1 text-xs text-slate-500">Ficha organizada do estoque.</p>
                     </div>
                     <button type="button" onClick={onClose} className="text-lg leading-none text-slate-400" aria-label="Fechar">×</button>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
+                    {field('item', 'Código')}
                     {field('secao', 'Seção')}
                     {field('produto', 'Produto', true)}
                     {field('modelo', 'Modelo')}
@@ -125,15 +121,12 @@ function ProductForm({ mode, initialProduct, onClose, onSubmit }: ProductFormPro
                         />
                     </label>
                     {field('unidade', 'Unidade')}
-                    {field('tecidoComposicao', 'Tecido / composição')}
-                    {field('item', 'Item')}
-                    {field('medida', 'Medida')}
-                    {field('observacoes', 'Observações', true)}
+                    {field('tecidoComposicao', 'Tecido / composição', true)}
                     {error && <p className="col-span-2 rounded border border-rose-200 bg-rose-50 px-3 py-2.5 text-xs text-rose-600">{error}</p>}
                     <div className="col-span-2 flex justify-end gap-2 pt-2">
                         <button type="button" onClick={onClose} className="rounded border border-slate-200 px-4 py-2.5 text-xs text-slate-600">Cancelar</button>
                         <button type="submit" disabled={saving} className="rounded bg-[#007d8b] px-4 py-2.5 text-xs text-white disabled:opacity-60">
-                            {saving ? 'Salvando...' : 'Salvar item'}
+                            {saving ? 'Salvando...' : 'Salvar'}
                         </button>
                     </div>
                 </div>
@@ -184,7 +177,7 @@ export default function Products(): JSX.Element {
     const filteredProducts = useMemo(() => products.filter((product) => {
         const searchable = [
             product.sku, product.secao, product.produto, product.modelo, product.cor,
-            product.tamanho, product.tecido_composicao, product.item, product.medida, product.observacoes,
+            product.tamanho, product.tecido_composicao, product.item,
         ].join(' ').toLowerCase();
         return searchable.includes(search.toLowerCase())
             && (sectionFilter === 'all' || product.secao === sectionFilter)
@@ -276,7 +269,7 @@ export default function Products(): JSX.Element {
                                         <td className={`px-3 py-2 text-right font-semibold ${product.quantity === 0 ? 'text-rose-600' : 'text-slate-700'}`}>{product.quantity}</td>
                                         <td className="px-3 py-2 text-right font-medium text-slate-700">{formatPrice(product.unit_price)}</td>
                                         <td className="px-3 py-2">{product.unidade}</td>
-                                        <td className="max-w-[180px] px-3 py-2">{product.tecido_composicao || product.medida || '—'}</td>
+                                        <td className="max-w-[180px] px-3 py-2">{product.tecido_composicao || '—'}</td>
                                         <td className="px-3 py-2">
                                             <div className="flex justify-end gap-1">
                                                 <button type="button" onClick={() => { setEditingProduct(product); setShowForm(true); }} className="rounded border border-slate-200 px-3 py-1.5 text-[11px] text-slate-600">Editar</button>

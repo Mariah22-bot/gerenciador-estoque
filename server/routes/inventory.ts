@@ -222,7 +222,8 @@ inventoryRouter.post('/products', async (request, response) => {
 
 inventoryRouter.put('/products/:id', async (request, response) => {
   const productId = Number(request.params.id);
-  const { secao, produto, modelo, cor, tamanho, quantity = 0, unitPrice = 0, unidade = 'un', tecidoComposicao, item, medida, observacoes } = request.body as {
+  const { sku, secao, produto, modelo, cor, tamanho, quantity = 0, unitPrice = 0, unidade = 'un', tecidoComposicao, item, medida, observacoes } = request.body as {
+    sku?: string;
     secao?: string;
     produto?: string;
     modelo?: string;
@@ -247,6 +248,11 @@ inventoryRouter.put('/products/:id', async (request, response) => {
     return;
   }
 
+  if (sku !== undefined && (typeof sku !== 'string' || !sku.trim() || sku.trim().length > 80)) {
+    response.status(400).json({ error: 'O código deve ter entre 1 e 80 caracteres.' });
+    return;
+  }
+
   if (!Number.isFinite(unitPrice) || unitPrice < 0) {
     response.status(400).json({ error: 'O preço deve ser um número não negativo.' });
     return;
@@ -255,10 +261,10 @@ inventoryRouter.put('/products/:id', async (request, response) => {
   try {
     const result = await pool.query(`
       UPDATE estoque
-        SET secao = $1, produto = $2, modelo = $3, cor = $4,
-          tamanho = $5, quantidade = $6, unit_price = $7, unidade = $8, tecido_composicao = $9,
-          item = $10, medida = $11, observacoes = $12, updated_at = NOW()
-        WHERE id = $13
+        SET sku = COALESCE($1, sku), secao = $2, produto = $3, modelo = $4, cor = $5,
+          tamanho = $6, quantidade = $7, unit_price = $8, unidade = $9, tecido_composicao = $10,
+          item = $11, medida = $12, observacoes = $13, updated_at = NOW()
+        WHERE id = $14
       RETURNING id,
                 COALESCE(sku, CASE WHEN id < 100 THEN LPAD(id::TEXT, 3, '0') ELSE id::TEXT END) AS sku,
                 COALESCE(produto, 'Sem descrição') AS name,
@@ -267,7 +273,7 @@ inventoryRouter.put('/products/:id', async (request, response) => {
                 unit_price,
                 minimum_quantity,
                 secao, COALESCE(produto, 'Sem descrição') AS produto, modelo, cor, tamanho, unidade, tecido_composicao, item, medida, observacoes
-    `, [secao?.trim() ?? null, produto.trim(), modelo?.trim() ?? null, cor?.trim() ?? null, tamanho?.trim() ?? null, quantity, unitPrice, unidade.trim(), tecidoComposicao?.trim() ?? null, item?.trim() ?? null, medida?.trim() ?? null, observacoes?.trim() ?? null, productId]);
+    `, [sku?.trim() ?? null, secao?.trim() ?? null, produto.trim(), modelo?.trim() ?? null, cor?.trim() ?? null, tamanho?.trim() ?? null, quantity, unitPrice, unidade.trim(), tecidoComposicao?.trim() ?? null, item?.trim() ?? null, medida?.trim() ?? null, observacoes?.trim() ?? null, productId]);
 
     if (result.rowCount === 0) {
       response.status(404).json({ error: 'Produto não encontrado.' });
@@ -275,7 +281,11 @@ inventoryRouter.put('/products/:id', async (request, response) => {
     }
 
     response.json(result.rows[0]);
-  } catch {
+  } catch (error: unknown) {
+    if (typeof error === 'object' && error !== null && 'code' in error && error.code === '23505') {
+      response.status(409).json({ error: 'Este código já está sendo usado por outro produto.' });
+      return;
+    }
     response.status(500).json({ error: 'Não foi possível atualizar o produto.' });
   }
 });
