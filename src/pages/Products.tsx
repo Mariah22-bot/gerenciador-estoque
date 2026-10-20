@@ -77,25 +77,25 @@ function ProductForm({ mode, initialProduct, onClose, onSubmit }: ProductFormPro
     }
 
     const field = (name: keyof ProductPayload, label: string, wide = false): JSX.Element => (
-        <label className={`${wide ? 'col-span-2' : ''} text-[10px] font-medium text-slate-700`}>
+        <label className={`${wide ? 'col-span-2' : ''} text-sm font-medium text-slate-700`}>
             {label}
             <input
                 value={String(form[name] ?? '')}
                 onChange={(event) => updateField(name, event.target.value)}
-                className="mt-1 w-full rounded border border-slate-200 px-2 py-2 text-xs outline-none focus:border-[#007d8b]"
+                className="mt-1 w-full rounded border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-[#007d8b]"
             />
         </label>
     );
 
     return (
         <div className="fixed inset-0 z-40 flex items-center justify-center overflow-y-auto bg-slate-950/40 p-4">
-            <form onSubmit={handleSubmit} className="my-4 w-full max-w-2xl rounded-xl bg-white p-5 shadow-xl">
+            <form onSubmit={handleSubmit} className="my-4 w-full max-w-2xl rounded-xl bg-white p-5 shadow-xl sm:p-6">
                 <div className="mb-4 flex items-start justify-between">
                     <div>
-                        <h2 className="text-sm font-semibold text-slate-800">
+                        <h2 className="text-base font-semibold text-slate-800">
                             {mode === 'create' ? 'Cadastrar item' : 'Editar item'}
                         </h2>
-                        <p className="mt-1 text-[10px] text-slate-500">Ficha organizada do estoque.</p>
+                        <p className="mt-1 text-xs text-slate-500">Ficha organizada do estoque.</p>
                     </div>
                     <button type="button" onClick={onClose} className="text-lg leading-none text-slate-400" aria-label="Fechar">×</button>
                 </div>
@@ -106,17 +106,17 @@ function ProductForm({ mode, initialProduct, onClose, onSubmit }: ProductFormPro
                     {field('modelo', 'Modelo')}
                     {field('cor', 'Cor')}
                     {field('tamanho', 'Tamanho')}
-                    <label className="text-[10px] font-medium text-slate-700">
+                    <label className="text-sm font-medium text-slate-700">
                         Quantidade
                         <input
                             type="number"
                             min="0"
                             value={form.quantity ?? 0}
                             onChange={(event) => updateField('quantity', Number(event.target.value))}
-                            className="mt-1 w-full rounded border border-slate-200 px-2 py-2 text-xs outline-none focus:border-[#007d8b]"
+                            className="mt-1 w-full rounded border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-[#007d8b]"
                         />
                     </label>
-                    <label className="text-[10px] font-medium text-slate-700">
+                    <label className="text-sm font-medium text-slate-700">
                         Preço unitário (R$)
                         <input
                             type="number"
@@ -124,7 +124,7 @@ function ProductForm({ mode, initialProduct, onClose, onSubmit }: ProductFormPro
                             step="0.01"
                             value={form.unitPrice ?? 0}
                             onChange={(event) => updateField('unitPrice', Number(event.target.value))}
-                            className="mt-1 w-full rounded border border-slate-200 px-2 py-2 text-xs outline-none focus:border-[#007d8b]"
+                            className="mt-1 w-full rounded border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-[#007d8b]"
                         />
                     </label>
                     {field('unidade', 'Unidade')}
@@ -132,10 +132,10 @@ function ProductForm({ mode, initialProduct, onClose, onSubmit }: ProductFormPro
                     {field('item', 'Item')}
                     {field('medida', 'Medida')}
                     {field('observacoes', 'Observações', true)}
-                    {error && <p className="col-span-2 rounded border border-rose-200 bg-rose-50 px-2 py-2 text-[10px] text-rose-600">{error}</p>}
+                    {error && <p className="col-span-2 rounded border border-rose-200 bg-rose-50 px-3 py-2.5 text-xs text-rose-600">{error}</p>}
                     <div className="col-span-2 flex justify-end gap-2 pt-2">
-                        <button type="button" onClick={onClose} className="rounded border border-slate-200 px-3 py-2 text-[10px] text-slate-600">Cancelar</button>
-                        <button type="submit" disabled={saving} className="rounded bg-[#007d8b] px-3 py-2 text-[10px] text-white disabled:opacity-60">
+                        <button type="button" onClick={onClose} className="rounded border border-slate-200 px-4 py-2.5 text-xs text-slate-600">Cancelar</button>
+                        <button type="submit" disabled={saving} className="rounded bg-[#007d8b] px-4 py-2.5 text-xs text-white disabled:opacity-60">
                             {saving ? 'Salvando...' : 'Salvar item'}
                         </button>
                     </div>
@@ -226,10 +226,10 @@ export default function Products(): JSX.Element {
         <div className="mx-auto max-w-[1200px] space-y-3">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <h1 className="text-lg font-semibold text-slate-800">Estoque organizado</h1>
-                    <p className="text-xs text-slate-500">Catálogo por fonte, seção e características do item.</p>
+                    <h1 className="text-xl font-semibold text-slate-800">Estoque organizado</h1>
+                    <p className="text-sm text-slate-500">Catálogo por fonte, seção e características do item.</p>
                 </div>
-                <button onClick={() => { setEditingProduct(null); setShowForm(true); }} className="flex min-h-9 items-center justify-center gap-1 self-start rounded bg-[#007d8b] px-3 py-2 text-[10px] text-white hover:bg-[#006c78] sm:self-auto">
+                <button onClick={() => { setEditingProduct(null); setShowForm(true); }} className="flex min-h-10 items-center justify-center gap-1 self-start rounded bg-[#007d8b] px-4 py-2.5 text-xs text-white hover:bg-[#006c78] sm:self-auto">
                     <Icon name="plus" size={11} />Novo item
                 </button>
             </div>
@@ -238,20 +238,20 @@ export default function Products(): JSX.Element {
                 <div className="flex flex-wrap gap-2">
                     <div className="relative min-w-[230px] flex-1">
                         <Icon name="search" size={12} className="absolute left-2 top-2 text-slate-400" />
-                        <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar em todos os campos..." className="w-full rounded border border-slate-200 py-1.5 pl-7 pr-2 text-[10px] outline-none focus:border-[#007d8b]" />
+                        <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar em todos os campos..." className="w-full rounded border border-slate-200 py-2 pl-7 pr-2 text-xs outline-none focus:border-[#007d8b]" />
                     </div>
-                    <select value={sourceFilter} onChange={(event) => setSourceFilter(event.target.value)} className="rounded border border-slate-200 px-2 py-1.5 text-[10px] text-slate-600">
+                    <select value={sourceFilter} onChange={(event) => setSourceFilter(event.target.value)} className="rounded border border-slate-200 px-3 py-2 text-xs text-slate-600">
                         <option value="all">Todas as fontes</option>
                         {sources.map((source) => <option key={source} value={source}>{source}</option>)}
                     </select>
-                    <select value={sectionFilter} onChange={(event) => setSectionFilter(event.target.value)} className="max-w-[220px] rounded border border-slate-200 px-2 py-1.5 text-[10px] text-slate-600">
+                    <select value={sectionFilter} onChange={(event) => setSectionFilter(event.target.value)} className="max-w-[220px] rounded border border-slate-200 px-3 py-2 text-xs text-slate-600">
                         <option value="all">Todas as seções</option>
                         {sections.map((section) => <option key={section} value={section}>{section}</option>)}
                     </select>
-                    <button onClick={() => setOnlyEmpty((current) => !current)} className={`flex items-center gap-1 rounded border px-3 py-1.5 text-[10px] ${onlyEmpty ? 'border-rose-200 bg-rose-50 text-rose-600' : 'border-slate-200 text-slate-600'}`}>
+                    <button onClick={() => setOnlyEmpty((current) => !current)} className={`flex items-center gap-1 rounded border px-3 py-2 text-xs ${onlyEmpty ? 'border-rose-200 bg-rose-50 text-rose-600' : 'border-slate-200 text-slate-600'}`}>
                         <Icon name="filter" size={11} />Sem estoque
                     </button>
-                    <span className="self-center text-[10px] text-slate-500">{filteredProducts.length} de {products.length}</span>
+                    <span className="self-center text-xs text-slate-500">{filteredProducts.length} de {products.length}</span>
                 </div>
 
                 {actionError && <p role="alert" className="mt-3 rounded border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-600">{actionError}</p>}
@@ -259,8 +259,8 @@ export default function Products(): JSX.Element {
                 {error && <p className="py-8 text-center text-xs text-rose-500">{error}</p>}
                 {!loading && !error && (
                     <div className="mt-3 overflow-x-auto">
-                        <table className="w-full min-w-[1280px] text-left text-[10px] text-slate-600">
-                            <thead className="border-b border-slate-200 bg-slate-50 text-[9px] text-slate-700">
+                        <table className="w-full min-w-[1380px] text-left text-xs text-slate-600">
+                            <thead className="border-b border-slate-200 bg-slate-50 text-[11px] text-slate-700">
                                 <tr>
                                     <th className="px-3 py-2">Código / seção</th>
                                     <th className="px-3 py-2">Produto</th>
@@ -280,7 +280,7 @@ export default function Products(): JSX.Element {
                                     <tr key={product.id} className="border-b border-slate-100 align-top hover:bg-slate-50">
                                         <td className="px-3 py-2">
                                             <div className="font-medium text-slate-700">{product.sku}</div>
-                                            <div className="mt-0.5 max-w-[150px] text-[9px] text-slate-400">{product.secao || 'Sem seção'}</div>
+                                            <div className="mt-0.5 max-w-[150px] text-[11px] text-slate-400">{product.secao || 'Sem seção'}</div>
                                         </td>
                                         <td className="max-w-[230px] px-3 py-2 font-medium text-slate-700">{product.produto}</td>
                                         <td className="max-w-[180px] px-3 py-2">{product.modelo || '—'}</td>
@@ -292,8 +292,8 @@ export default function Products(): JSX.Element {
                                         <td className="max-w-[180px] px-3 py-2">{product.tecido_composicao || product.medida || '—'}</td>
                                         <td className="px-3 py-2">
                                             <div className="flex justify-end gap-1">
-                                                <button type="button" onClick={() => { setEditingProduct(product); setShowForm(true); }} className="rounded border border-slate-200 px-2 py-1 text-[9px] text-slate-600">Editar</button>
-                                                <button type="button" onClick={() => void deleteProduct(product)} disabled={deletingProductId !== null} className="rounded border border-rose-200 bg-rose-50 px-2 py-1 text-[9px] text-rose-600 disabled:cursor-wait disabled:opacity-60">
+                                                <button type="button" onClick={() => { setEditingProduct(product); setShowForm(true); }} className="rounded border border-slate-200 px-3 py-1.5 text-[11px] text-slate-600">Editar</button>
+                                                <button type="button" onClick={() => void deleteProduct(product)} disabled={deletingProductId !== null} className="rounded border border-rose-200 bg-rose-50 px-3 py-1.5 text-[11px] text-rose-600 disabled:cursor-wait disabled:opacity-60">
                                                     {deletingProductId === product.id ? 'Excluindo...' : 'Excluir'}
                                                 </button>
                                             </div>
