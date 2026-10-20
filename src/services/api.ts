@@ -31,6 +31,7 @@ export interface Product {
 export interface DashboardSummary {
   product_count: number;
   products_without_turnover_count: number;
+  stock_units: number;
   invested_capital: string;
   entries: number;
   exits: number;

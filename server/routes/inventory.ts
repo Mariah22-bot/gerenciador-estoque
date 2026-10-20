@@ -120,6 +120,7 @@ inventoryRouter.get('/dashboard/summary', async (_request, response) => {
               AND stock_movements.type = 'saida'
           )
         )::int AS products_without_turnover_count,
+        COALESCE(SUM(COALESCE(quantidade, 0)), 0)::int AS stock_units,
         COALESCE(SUM(COALESCE(quantidade, 0) * unit_price), 0)::numeric AS invested_capital,
         COALESCE((SELECT SUM(quantity) FROM stock_movements WHERE type = 'entrada'), 0)::int AS entries,
         COALESCE((SELECT SUM(quantity) FROM stock_movements WHERE type = 'saida'), 0)::int AS exits
