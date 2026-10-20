@@ -3,7 +3,7 @@ import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer,
 import { inventoryApi, type AnalyticsData } from '../services/api';
 
 const colors = ['#007d8b', '#ec9b16', '#e22b36'];
-const emptyData: AnalyticsData = { topProducts: [], abc: [], turnover: [] };
+const emptyData: AnalyticsData = { topProducts: [], abc: [], turnover: [], turnoverByCategory: [] };
 
 export default function Analytics(): JSX.Element {
     const [data, setData] = useState<AnalyticsData>(emptyData);

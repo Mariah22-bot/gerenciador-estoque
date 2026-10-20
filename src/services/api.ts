@@ -41,6 +41,7 @@ export interface AnalyticsData {
   topProducts: { name: string; sku: string; units_moved: number }[];
   abc: { classification: 'A' | 'B' | 'C'; products: number }[];
   turnover: { month: string; entries: number; exits: number }[];
+  turnoverByCategory: { category: string; month: string; entries: number; exits: number }[];
 }
 
 export type ProductPayload = {

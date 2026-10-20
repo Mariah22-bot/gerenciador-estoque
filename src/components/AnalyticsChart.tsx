@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, type JSX } from 'react';
 import { inventoryApi, type AnalyticsData } from '../services/api';
 
-const emptyData: AnalyticsData = { topProducts: [], abc: [], turnover: [] };
+const emptyData: AnalyticsData = { topProducts: [], abc: [], turnover: [], turnoverByCategory: [] };
 
 export default function AnalyticsChart(): JSX.Element {
     const [data, setData] = useState<AnalyticsData>(emptyData);
@@ -35,13 +35,21 @@ export default function AnalyticsChart(): JSX.Element {
         return () => window.removeEventListener('inventory:updated', handleInventoryUpdate);
     }, [loadAnalytics]);
 
-    const turnoverValues = useMemo(() => {
-        if (!data.turnover.length) {
-            return [] as number[];
-        }
-
-        return data.turnover.map((entry) => Number(entry.entries) + Number(entry.exits));
-    }, [data.turnover]);
+    const [selectedCategory, setSelectedCategory] = useState('');
+    const categories = useMemo(
+        () => [...new Set(data.turnoverByCategory.map((entry) => entry.category))],
+        [data.turnoverByCategory],
+    );
+    const selectedTurnover = useMemo(
+        () => selectedCategory
+            ? data.turnoverByCategory.filter((entry) => entry.category === selectedCategory)
+            : data.turnover,
+        [data.turnover, data.turnoverByCategory, selectedCategory],
+    );
+    const turnoverValues = useMemo(
+        () => selectedTurnover.map((entry) => Number(entry.entries) + Number(entry.exits)),
+        [selectedTurnover],
+    );
 
     const maxTurnover = Math.max(...turnoverValues, 1);
     const chartPoints = useMemo(() => {
@@ -58,11 +66,11 @@ export default function AnalyticsChart(): JSX.Element {
             .join(' ');
     }, [maxTurnover, turnoverValues]);
 
-    const currentAverage = data.turnover.length
-        ? (data.turnover.reduce((total, item) => total + Number(item.entries) + Number(item.exits), 0) / data.turnover.length).toFixed(1)
+    const currentAverage = selectedTurnover.length
+        ? (selectedTurnover.reduce((total, item) => total + Number(item.entries) + Number(item.exits), 0) / selectedTurnover.length).toFixed(1)
         : '0.0';
 
-    const months = data.turnover.map((item) => item.month).slice(-6);
+    const months = selectedTurnover.map((item) => item.month).slice(-6);
 
     if (loading) {
         return <div className="h-[253px] rounded-lg border border-slate-200 bg-white p-3 text-center text-[10px] text-slate-500">Carregando métricas...</div>;
@@ -74,12 +82,23 @@ export default function AnalyticsChart(): JSX.Element {
 
     return (
         <div className="h-[253px] rounded-lg border border-slate-200 bg-white p-3">
-            <div className="mb-1 flex items-start justify-between">
+            <div className="mb-1 flex items-start justify-between gap-2">
                 <div>
                     <h2 className="text-xs font-semibold text-slate-800">Taxa de rotatividade do estoque</h2>
                     <p className="text-[9px] text-slate-500">Volumes movimentados por mês — últimos 6 meses</p>
                 </div>
-                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[8px] text-slate-700">↗ {currentAverage}x</span>
+                <div className="flex shrink-0 items-center gap-1">
+                    <select
+                        aria-label="Filtrar rotatividade por categoria"
+                        className="max-w-28 rounded-full border border-slate-200 bg-white px-2 py-1 text-[8px] text-slate-700"
+                        value={selectedCategory}
+                        onChange={(event) => setSelectedCategory(event.target.value)}
+                    >
+                        <option value="">Todas as categorias</option>
+                        {categories.map((category) => <option key={category} value={category}>{category}</option>)}
+                    </select>
+                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[8px] text-slate-700">↗ {currentAverage}x</span>
+                </div>
             </div>
             <div className="mt-2 flex items-end gap-2"><strong className="text-xl text-slate-800">{currentAverage}x</strong><span className="text-[9px] text-slate-500">giro médio</span></div>
             <div className="relative mt-1 h-[157px] pl-6">

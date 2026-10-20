@@ -41,16 +41,67 @@ inventoryRouter.get('/analytics', async (_request, response) => {
     `);
 
     const turnover = await pool.query(`
-      SELECT TO_CHAR(DATE_TRUNC('month', occurred_at), 'Mon') AS month,
-             COALESCE(SUM(quantity) FILTER (WHERE type = 'saida'), 0)::int AS exits,
-             COALESCE(SUM(quantity) FILTER (WHERE type = 'entrada'), 0)::int AS entries
-      FROM stock_movements
-      WHERE occurred_at >= DATE_TRUNC('month', NOW()) - INTERVAL '5 months'
-      GROUP BY DATE_TRUNC('month', occurred_at)
-      ORDER BY DATE_TRUNC('month', occurred_at)
+      WITH months AS (
+        SELECT generate_series(
+          DATE_TRUNC('month', NOW()) - INTERVAL '5 months',
+          DATE_TRUNC('month', NOW()),
+          INTERVAL '1 month'
+        ) AS month
+      ), monthly_movements AS (
+        SELECT DATE_TRUNC('month', occurred_at) AS month,
+               COALESCE(SUM(quantity) FILTER (WHERE type = 'saida'), 0)::int AS exits,
+               COALESCE(SUM(quantity) FILTER (WHERE type = 'entrada'), 0)::int AS entries
+        FROM stock_movements
+        WHERE occurred_at >= DATE_TRUNC('month', NOW()) - INTERVAL '5 months'
+        GROUP BY DATE_TRUNC('month', occurred_at)
+      )
+      SELECT TO_CHAR(months.month, 'Mon') AS month,
+             COALESCE(monthly_movements.exits, 0)::int AS exits,
+             COALESCE(monthly_movements.entries, 0)::int AS entries
+      FROM months
+      LEFT JOIN monthly_movements ON monthly_movements.month = months.month
+      ORDER BY months.month
     `);
 
-    response.json({ topProducts: topProducts.rows, abc: abc.rows, turnover: turnover.rows });
+    const turnoverByCategory = await pool.query(`
+      WITH months AS (
+        SELECT generate_series(
+          DATE_TRUNC('month', NOW()) - INTERVAL '5 months',
+          DATE_TRUNC('month', NOW()),
+          INTERVAL '1 month'
+        ) AS month
+      ), categories AS (
+        SELECT DISTINCT COALESCE(e.secao, e.fonte, 'Sem categoria') AS category
+        FROM estoque AS e
+      ), monthly_movements AS (
+        SELECT COALESCE(e.secao, e.fonte, 'Sem categoria') AS category,
+               DATE_TRUNC('month', movements.occurred_at) AS month,
+               COALESCE(SUM(movements.quantity) FILTER (WHERE movements.type = 'saida'), 0)::int AS exits,
+               COALESCE(SUM(movements.quantity) FILTER (WHERE movements.type = 'entrada'), 0)::int AS entries
+        FROM stock_movements AS movements
+        JOIN estoque AS e ON e.id = movements.product_id
+        WHERE movements.occurred_at >= DATE_TRUNC('month', NOW()) - INTERVAL '5 months'
+        GROUP BY COALESCE(e.secao, e.fonte, 'Sem categoria'),
+                 DATE_TRUNC('month', movements.occurred_at)
+      )
+      SELECT categories.category,
+             TO_CHAR(months.month, 'Mon') AS month,
+             COALESCE(monthly_movements.exits, 0)::int AS exits,
+             COALESCE(monthly_movements.entries, 0)::int AS entries
+      FROM categories
+      CROSS JOIN months
+      LEFT JOIN monthly_movements
+        ON monthly_movements.category = categories.category
+        AND monthly_movements.month = months.month
+      ORDER BY categories.category, months.month
+    `);
+
+    response.json({
+      topProducts: topProducts.rows,
+      abc: abc.rows,
+      turnover: turnover.rows,
+      turnoverByCategory: turnoverByCategory.rows,
+    });
   } catch {
     response.status(500).json({ error: 'Não foi possível calcular as análises do estoque.' });
   }
