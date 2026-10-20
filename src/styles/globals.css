@@ -14,6 +14,14 @@
     --border-color: #e2e8f0;
 }
 
+:root.dark {
+    color-scheme: dark;
+    --background: #0f172a;
+    --foreground: #e2e8f0;
+    --card-bg: #1e293b;
+    --border-color: #334155;
+}
+
 /* ==========================================================================
    2. REGRAS GLOBAIS E RESET
    ========================================================================== */
@@ -76,6 +84,112 @@
 
 .dark ::-webkit-scrollbar-thumb:hover {
     background: #475569;
+}
+
+.dark #root > div {
+    background-color: var(--background);
+}
+
+.dark header {
+    background-color: #111827;
+}
+
+.dark .bg-white {
+    background-color: #1e293b;
+}
+
+.dark .bg-slate-50 {
+    background-color: #0f172a;
+}
+
+.dark .bg-slate-100 {
+    background-color: #334155;
+}
+
+.dark .bg-slate-200 {
+    background-color: #475569;
+}
+
+.dark .text-slate-900,
+.dark .text-slate-800 {
+    color: #f1f5f9;
+}
+
+.dark .text-slate-700 {
+    color: #e2e8f0;
+}
+
+.dark .text-slate-600 {
+    color: #cbd5e1;
+}
+
+.dark .text-slate-500,
+.dark .text-slate-400 {
+    color: #94a3b8;
+}
+
+.dark .border-slate-100,
+.dark .border-slate-200 {
+    border-color: #334155;
+}
+
+.dark .border-slate-300 {
+    border-color: #475569;
+}
+
+.dark input,
+.dark select,
+.dark textarea {
+    background-color: #0f172a;
+    color: #e2e8f0;
+    border-color: #475569;
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+    color: #94a3b8;
+}
+
+.dark .bg-rose-50 {
+    background-color: #4c1d2b;
+}
+
+.dark .bg-rose-100 {
+    background-color: #881337;
+}
+
+.dark .text-rose-600,
+.dark .text-rose-500 {
+    color: #fda4af;
+}
+
+.dark .border-rose-100,
+.dark .border-rose-200 {
+    border-color: #9f1239;
+}
+
+.dark .bg-cyan-50 {
+    background-color: #164e63;
+}
+
+.dark .bg-orange-50 {
+    background-color: #7c2d12;
+}
+
+.dark .text-orange-600 {
+    color: #fdba74;
+}
+
+.dark .bg-amber-50 {
+    background-color: #78350f;
+}
+
+.dark .text-amber-700 {
+    color: #fcd34d;
+}
+
+.dark [fill="#dcecef"] {
+    fill: #164e63;
 }
 
 /* ==========================================================================
