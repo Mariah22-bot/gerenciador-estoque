@@ -71,17 +71,17 @@ inventoryRouter.get('/analytics', async (_request, response) => {
           INTERVAL '1 month'
         ) AS month
       ), categories AS (
-        SELECT DISTINCT COALESCE(e.secao, e.codigo, 'Sem categoria') AS category
+        SELECT DISTINCT COALESCE(e.secao, 'Sem categoria') AS category
         FROM estoque AS e
       ), monthly_movements AS (
-        SELECT COALESCE(e.secao, e.codigo, 'Sem categoria') AS category,
+        SELECT COALESCE(e.secao, 'Sem categoria') AS category,
                DATE_TRUNC('month', movements.occurred_at) AS month,
                COALESCE(SUM(movements.quantity) FILTER (WHERE movements.type = 'saida'), 0)::int AS exits,
                COALESCE(SUM(movements.quantity) FILTER (WHERE movements.type = 'entrada'), 0)::int AS entries
         FROM stock_movements AS movements
         JOIN estoque AS e ON e.id = movements.product_id
         WHERE movements.occurred_at >= DATE_TRUNC('month', NOW()) - INTERVAL '5 months'
-        GROUP BY COALESCE(e.secao, e.codigo, 'Sem categoria'),
+        GROUP BY COALESCE(e.secao, 'Sem categoria'),
                  DATE_TRUNC('month', movements.occurred_at)
       )
       SELECT categories.category,
@@ -138,11 +138,11 @@ inventoryRouter.get('/products', async (_request, response) => {
       SELECT e.id,
              COALESCE(e.sku, CASE WHEN e.id < 100 THEN LPAD(e.id::TEXT, 3, '0') ELSE e.id::TEXT END) AS sku,
              COALESCE(e.produto, 'Sem descrição') AS name,
-             COALESCE(e.secao, e.codigo) AS category,
+             e.secao AS category,
              COALESCE(e.quantidade, 0) AS quantity,
              e.unit_price,
              e.minimum_quantity,
-             e.codigo, e.secao, COALESCE(e.produto, 'Sem descrição') AS produto, e.modelo, e.cor, e.tamanho,
+             e.secao, COALESCE(e.produto, 'Sem descrição') AS produto, e.modelo, e.cor, e.tamanho,
              e.unidade, e.tecido_composicao, e.item, e.medida, e.observacoes,
              e.created_at,
              e.updated_at
@@ -175,8 +175,7 @@ inventoryRouter.get('/movements', async (_request, response) => {
 });
 
 inventoryRouter.post('/products', async (request, response) => {
-  const { codigo = 'VARIADOS', secao, produto, modelo, cor, tamanho, quantity = 0, unitPrice = 0, unidade = 'un', tecidoComposicao, item, medida, observacoes } = request.body as {
-    codigo?: string;
+  const { secao, produto, modelo, cor, tamanho, quantity = 0, unitPrice = 0, unidade = 'un', tecidoComposicao, item, medida, observacoes } = request.body as {
     secao?: string;
     produto?: string;
     modelo?: string;
@@ -203,17 +202,17 @@ inventoryRouter.post('/products', async (request, response) => {
 
   try {
     const result = await pool.query(`
-      INSERT INTO estoque (codigo, secao, produto, quantidade, unit_price, unidade, modelo, cor, tamanho, tecido_composicao, item, medida, observacoes)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+      INSERT INTO estoque (secao, produto, quantidade, unit_price, unidade, modelo, cor, tamanho, tecido_composicao, item, medida, observacoes)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
       RETURNING id,
                 COALESCE(sku, CASE WHEN id < 100 THEN LPAD(id::TEXT, 3, '0') ELSE id::TEXT END) AS sku,
                 COALESCE(produto, 'Sem descrição') AS name,
-                COALESCE(secao, codigo) AS category,
+                secao AS category,
                 COALESCE(quantidade, 0) AS quantity,
                 unit_price,
                 minimum_quantity,
-                codigo, secao, COALESCE(produto, 'Sem descrição') AS produto, modelo, cor, tamanho, unidade, tecido_composicao, item, medida, observacoes
-    `, [codigo.trim() || 'VARIADOS', secao?.trim() ?? null, produto.trim(), quantity, unitPrice, unidade.trim(), modelo?.trim() ?? null, cor?.trim() ?? null, tamanho?.trim() ?? null, tecidoComposicao?.trim() ?? null, item?.trim() ?? null, medida?.trim() ?? null, observacoes?.trim() ?? null]);
+                secao, COALESCE(produto, 'Sem descrição') AS produto, modelo, cor, tamanho, unidade, tecido_composicao, item, medida, observacoes
+    `, [secao?.trim() ?? null, produto.trim(), quantity, unitPrice, unidade.trim(), modelo?.trim() ?? null, cor?.trim() ?? null, tamanho?.trim() ?? null, tecidoComposicao?.trim() ?? null, item?.trim() ?? null, medida?.trim() ?? null, observacoes?.trim() ?? null]);
 
     response.status(201).json(result.rows[0]);
   } catch {
@@ -223,8 +222,7 @@ inventoryRouter.post('/products', async (request, response) => {
 
 inventoryRouter.put('/products/:id', async (request, response) => {
   const productId = Number(request.params.id);
-  const { codigo = 'VARIADOS', secao, produto, modelo, cor, tamanho, quantity = 0, unitPrice = 0, unidade = 'un', tecidoComposicao, item, medida, observacoes } = request.body as {
-    codigo?: string;
+  const { secao, produto, modelo, cor, tamanho, quantity = 0, unitPrice = 0, unidade = 'un', tecidoComposicao, item, medida, observacoes } = request.body as {
     secao?: string;
     produto?: string;
     modelo?: string;
@@ -257,19 +255,19 @@ inventoryRouter.put('/products/:id', async (request, response) => {
   try {
     const result = await pool.query(`
       UPDATE estoque
-        SET codigo = $1, secao = $2, produto = $3, modelo = $4, cor = $5,
-          tamanho = $6, quantidade = $7, unit_price = $8, unidade = $9, tecido_composicao = $10,
-          item = $11, medida = $12, observacoes = $13, updated_at = NOW()
-        WHERE id = $14
+        SET secao = $1, produto = $2, modelo = $3, cor = $4,
+          tamanho = $5, quantidade = $6, unit_price = $7, unidade = $8, tecido_composicao = $9,
+          item = $10, medida = $11, observacoes = $12, updated_at = NOW()
+        WHERE id = $13
       RETURNING id,
                 COALESCE(sku, CASE WHEN id < 100 THEN LPAD(id::TEXT, 3, '0') ELSE id::TEXT END) AS sku,
                 COALESCE(produto, 'Sem descrição') AS name,
-                COALESCE(secao, codigo) AS category,
+                secao AS category,
                 COALESCE(quantidade, 0) AS quantity,
                 unit_price,
                 minimum_quantity,
-                codigo, secao, COALESCE(produto, 'Sem descrição') AS produto, modelo, cor, tamanho, unidade, tecido_composicao, item, medida, observacoes
-    `, [codigo.trim() || 'VARIADOS', secao?.trim() ?? null, produto.trim(), modelo?.trim() ?? null, cor?.trim() ?? null, tamanho?.trim() ?? null, quantity, unitPrice, unidade.trim(), tecidoComposicao?.trim() ?? null, item?.trim() ?? null, medida?.trim() ?? null, observacoes?.trim() ?? null, productId]);
+                secao, COALESCE(produto, 'Sem descrição') AS produto, modelo, cor, tamanho, unidade, tecido_composicao, item, medida, observacoes
+    `, [secao?.trim() ?? null, produto.trim(), modelo?.trim() ?? null, cor?.trim() ?? null, tamanho?.trim() ?? null, quantity, unitPrice, unidade.trim(), tecidoComposicao?.trim() ?? null, item?.trim() ?? null, medida?.trim() ?? null, observacoes?.trim() ?? null, productId]);
 
     if (result.rowCount === 0) {
       response.status(404).json({ error: 'Produto não encontrado.' });

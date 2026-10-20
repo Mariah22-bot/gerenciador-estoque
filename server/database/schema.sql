@@ -1,8 +1,8 @@
--- Este esquema é aditivo: a inicialização não apaga tabelas nem dados.
+-- A inicialização preserva as tabelas e os dados de estoque/movimentações;
+-- colunas legadas codigo e fonte são removidas por não diferenciarem produtos.
 
 CREATE TABLE IF NOT EXISTS estoque (
   id SERIAL PRIMARY KEY,
-  codigo VARCHAR(100) NOT NULL DEFAULT 'VARIADOS',
   secao VARCHAR(150),
   produto TEXT,
   modelo TEXT,
@@ -32,31 +32,10 @@ BEGIN
   IF EXISTS (
     SELECT 1 FROM information_schema.columns
     WHERE table_schema = 'public' AND table_name = 'estoque' AND column_name = 'fonte'
-  ) AND NOT EXISTS (
-    SELECT 1 FROM information_schema.columns
-    WHERE table_schema = 'public' AND table_name = 'estoque' AND column_name = 'codigo'
   ) THEN
-    ALTER TABLE public.estoque RENAME COLUMN fonte TO codigo;
-  ELSIF EXISTS (
-    SELECT 1 FROM information_schema.columns
-    WHERE table_schema = 'public' AND table_name = 'estoque' AND column_name = 'fonte'
-  ) AND EXISTS (
-    SELECT 1 FROM information_schema.columns
-    WHERE table_schema = 'public' AND table_name = 'estoque' AND column_name = 'codigo'
-  ) THEN
-    UPDATE public.estoque
-    SET codigo = CASE
-      WHEN codigo IS NULL OR codigo = '' OR (codigo = 'VARIADOS' AND fonte <> 'VARIADOS') THEN fonte
-      ELSE codigo
-    END;
     ALTER TABLE public.estoque DROP COLUMN fonte;
   END IF;
-
-  ALTER TABLE public.estoque
-    ADD COLUMN IF NOT EXISTS codigo VARCHAR(100) NOT NULL DEFAULT 'VARIADOS';
-  UPDATE public.estoque SET codigo = 'VARIADOS' WHERE codigo IS NULL OR codigo = '';
-  ALTER TABLE public.estoque ALTER COLUMN codigo SET DEFAULT 'VARIADOS';
-  ALTER TABLE public.estoque ALTER COLUMN codigo SET NOT NULL;
+  ALTER TABLE public.estoque DROP COLUMN IF EXISTS codigo;
 END $$;
 
 -- Migra a estrutura anterior preservando IDs, SKUs, preços, mínimos e movimentos.
@@ -94,10 +73,10 @@ BEGIN
   END IF;
 
   INSERT INTO public.estoque (
-    id, codigo, secao, produto, quantidade, sku, unit_price,
+    id, secao, produto, quantidade, sku, unit_price,
     minimum_quantity, unidade, created_at, updated_at
   )
-  SELECT id, 'VARIADOS', category, name, quantity, sku, unit_price,
+  SELECT id, category, name, quantity, sku, unit_price,
          minimum_quantity, 'un', created_at, updated_at
   FROM public.products
   ORDER BY id;

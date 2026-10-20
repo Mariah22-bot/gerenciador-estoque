@@ -10,7 +10,6 @@ interface ProductFormProps {
 }
 
 const emptyPayload: ProductPayload = {
-    codigo: '',
     secao: '',
     produto: '',
     modelo: '',
@@ -42,7 +41,6 @@ function ProductForm({ mode, initialProduct, onClose, onSubmit }: ProductFormPro
 
     useEffect(() => {
         setForm(initialProduct ? {
-            codigo: initialProduct.codigo,
             secao: initialProduct.secao ?? '',
             produto: initialProduct.produto,
             modelo: initialProduct.modelo ?? '',
@@ -100,7 +98,6 @@ function ProductForm({ mode, initialProduct, onClose, onSubmit }: ProductFormPro
                     <button type="button" onClick={onClose} className="text-lg leading-none text-slate-400" aria-label="Fechar">×</button>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
-                    {field('codigo', 'Código')}
                     {field('secao', 'Seção')}
                     {field('produto', 'Produto', true)}
                     {field('modelo', 'Modelo')}
@@ -149,7 +146,6 @@ export default function Products(): JSX.Element {
     const [products, setProducts] = useState<Product[]>([]);
     const [search, setSearch] = useState('');
     const [sectionFilter, setSectionFilter] = useState('all');
-    const [codeFilter, setCodeFilter] = useState('all');
     const [onlyEmpty, setOnlyEmpty] = useState(false);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -185,20 +181,15 @@ export default function Products(): JSX.Element {
             .sort((a, b) => a.localeCompare(b)),
         [products],
     );
-    const codes = useMemo(
-        () => Array.from(new Set(products.map((product) => product.codigo).filter(Boolean))).sort((a, b) => a.localeCompare(b)),
-        [products],
-    );
     const filteredProducts = useMemo(() => products.filter((product) => {
         const searchable = [
-            product.sku, product.codigo, product.secao, product.produto, product.modelo, product.cor,
+            product.sku, product.secao, product.produto, product.modelo, product.cor,
             product.tamanho, product.tecido_composicao, product.item, product.medida, product.observacoes,
         ].join(' ').toLowerCase();
         return searchable.includes(search.toLowerCase())
             && (sectionFilter === 'all' || product.secao === sectionFilter)
-            && (codeFilter === 'all' || product.codigo === codeFilter)
             && (!onlyEmpty || product.quantity === 0);
-    }), [products, search, sectionFilter, codeFilter, onlyEmpty]);
+    }), [products, search, sectionFilter, onlyEmpty]);
 
     async function saveProduct(payload: ProductPayload): Promise<void> {
         if (editingProduct) await inventoryApi.updateProduct(editingProduct.id, payload);
@@ -227,7 +218,7 @@ export default function Products(): JSX.Element {
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <h1 className="text-xl font-semibold text-slate-800">Estoque organizado</h1>
-                    <p className="text-sm text-slate-500">Catálogo por código, seção e características do item.</p>
+                    <p className="text-sm text-slate-500">Catálogo por código (SKU), seção e características do item.</p>
                 </div>
                 <button onClick={() => { setEditingProduct(null); setShowForm(true); }} className="flex min-h-10 items-center justify-center gap-1 self-start rounded bg-[#007d8b] px-4 py-2.5 text-xs text-white hover:bg-[#006c78] sm:self-auto">
                     <Icon name="plus" size={11} />Novo item
@@ -240,10 +231,6 @@ export default function Products(): JSX.Element {
                         <Icon name="search" size={12} className="absolute left-2 top-2 text-slate-400" />
                         <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar em todos os campos..." className="w-full rounded border border-slate-200 py-2 pl-7 pr-2 text-xs outline-none focus:border-[#007d8b]" />
                     </div>
-                    <select value={codeFilter} onChange={(event) => setCodeFilter(event.target.value)} className="rounded border border-slate-200 px-3 py-2 text-xs text-slate-600">
-                        <option value="all">Todos os códigos</option>
-                        {codes.map((code) => <option key={code} value={code}>{code}</option>)}
-                    </select>
                     <select value={sectionFilter} onChange={(event) => setSectionFilter(event.target.value)} className="max-w-[220px] rounded border border-slate-200 px-3 py-2 text-xs text-slate-600">
                         <option value="all">Todas as seções</option>
                         {sections.map((section) => <option key={section} value={section}>{section}</option>)}

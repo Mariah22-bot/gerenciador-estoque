@@ -16,7 +16,6 @@ export interface Product {
   quantity: number;
   unit_price?: string;
   minimum_quantity?: number;
-  codigo: string;
   secao: string | null;
   produto: string;
   modelo: string | null;
@@ -45,7 +44,6 @@ export interface AnalyticsData {
 }
 
 export type ProductPayload = {
-  codigo?: string;
   secao?: string;
   produto: string;
   modelo?: string;
