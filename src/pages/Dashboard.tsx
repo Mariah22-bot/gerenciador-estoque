@@ -64,7 +64,7 @@ export default function Dashboard(): JSX.Element {
 
     return (
         <div className="mx-auto max-w-[1120px] space-y-3">
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
                 <StatCard title="Produtos cadastrados" value={String(summary.product_count)} change="Dados reais" isPositive={true} icon="box" />
                 <StatCard
                     title="Produtos sem giro"
@@ -78,7 +78,7 @@ export default function Dashboard(): JSX.Element {
                 <StatCard title="Capital imobilizado" value={capital} change="Valor atual" isPositive={true} icon="box" />
                 <StatCard title="Entradas vs. saídas" value={`${summary.entries} / ${summary.exits}`} change={`Saldo ${balance >= 0 ? '+' : ''}${balance}`} isPositive={balance >= 0} icon="exchange" />
             </div>
-            <div className="grid grid-cols-1 gap-3 lg:grid-cols-3"><div className="lg:col-span-2"><AnalyticsChart /></div><div className="rounded-lg border border-slate-200 bg-white p-3"><h2 className="text-xs font-semibold text-slate-800">Mais vendidos vs. mais parados</h2><p className="mb-2 text-[9px] text-slate-500">Os dados serão calculados a partir das movimentações.</p><p className="py-8 text-center text-[9px] text-slate-400">Ainda não há movimentações cadastradas.</p></div></div>
+            <div className="grid min-w-0 grid-cols-1 gap-3 lg:grid-cols-3"><div className="min-w-0 lg:col-span-2"><AnalyticsChart /></div><div className="min-w-0 rounded-lg border border-slate-200 bg-white p-3"><h2 className="text-xs font-semibold text-slate-800">Mais vendidos vs. mais parados</h2><p className="mb-2 text-[9px] text-slate-500">Os dados serão calculados a partir das movimentações.</p><p className="py-8 text-center text-[9px] text-slate-400">Ainda não há movimentações cadastradas.</p></div></div>
             <UserTable
                 movements={movements}
                 loading={loading}

@@ -35,11 +35,11 @@ export default function UserTable({ movements, loading, error, onNewMovement, on
 
     return (
         <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
-            <div className="flex items-center justify-between border-b border-slate-200 px-3 py-2">
+            <div className="flex flex-col gap-2 border-b border-slate-200 px-3 py-2 sm:flex-row sm:items-center sm:justify-between">
                 <div><h2 className="text-xs font-semibold text-slate-800">Movimentações recentes</h2><p className="text-[9px] text-slate-500">Entradas e saídas registradas nos últimos 7 dias</p></div>
-                <button onClick={onNewMovement} className="flex items-center gap-1 rounded bg-[#007d8b] px-2 py-1 text-[9px] text-white hover:bg-[#006c78]"><Icon name="plus" size={10} />Registrar nova movimentação</button>
+                <button onClick={onNewMovement} className="flex min-h-8 items-center justify-center gap-1 self-start rounded bg-[#007d8b] px-2 py-1 text-[9px] text-white hover:bg-[#006c78] sm:self-auto"><Icon name="plus" size={10} />Registrar nova movimentação</button>
             </div>
-            <div className="flex gap-1 border-b border-slate-100 px-3 py-2"><div className="relative"><Icon name="search" size={11} className="absolute left-2 top-1.5 text-slate-400" /><input placeholder="Filtrar por SKU ou produto..." className="w-48 rounded border border-slate-200 py-1 pl-6 pr-2 text-[9px] outline-none" /></div><button className="flex items-center gap-1 rounded border border-slate-200 px-2 text-[9px] text-slate-600"><Icon name="filter" size={10} />Todos os tipos</button><span className="ml-auto self-center text-[8px] text-slate-500">{movements.length} registros</span></div>
+            <div className="flex flex-wrap items-center gap-2 border-b border-slate-100 px-3 py-2"><div className="relative min-w-0 flex-1 sm:flex-none"><Icon name="search" size={11} className="absolute left-2 top-1.5 text-slate-400" /><input placeholder="Filtrar por SKU ou produto..." className="w-full rounded border border-slate-200 py-1.5 pl-6 pr-2 text-[9px] outline-none sm:w-48" /></div><button className="flex min-h-8 shrink-0 items-center gap-1 rounded border border-slate-200 px-2 text-[9px] text-slate-600"><Icon name="filter" size={10} />Todos os tipos</button><span className="ml-auto self-center text-[8px] text-slate-500">{movements.length} registros</span></div>
             {actionError && <p role="alert" className="border-b border-rose-100 bg-rose-50 px-3 py-2 text-[10px] text-rose-600">{actionError}</p>}
             <div className="overflow-x-auto">
             <table className="w-full min-w-[650px] text-left text-[9px] text-slate-600">

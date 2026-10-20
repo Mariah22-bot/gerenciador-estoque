@@ -88,7 +88,7 @@ function ProductForm({ mode, initialProduct, onClose, onSubmit }: ProductFormPro
     );
 
     return (
-        <div className="fixed inset-0 z-10 flex items-center justify-center overflow-y-auto bg-slate-950/40 p-4">
+        <div className="fixed inset-0 z-40 flex items-center justify-center overflow-y-auto bg-slate-950/40 p-4">
             <form onSubmit={handleSubmit} className="my-4 w-full max-w-2xl rounded-xl bg-white p-5 shadow-xl">
                 <div className="mb-4 flex items-start justify-between">
                     <div>
@@ -224,12 +224,12 @@ export default function Products(): JSX.Element {
 
     return (
         <div className="mx-auto max-w-[1200px] space-y-3">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <h1 className="text-lg font-semibold text-slate-800">Estoque organizado</h1>
                     <p className="text-xs text-slate-500">Catálogo por fonte, seção e características do item.</p>
                 </div>
-                <button onClick={() => { setEditingProduct(null); setShowForm(true); }} className="flex items-center gap-1 rounded bg-[#007d8b] px-3 py-2 text-[10px] text-white hover:bg-[#006c78]">
+                <button onClick={() => { setEditingProduct(null); setShowForm(true); }} className="flex min-h-9 items-center justify-center gap-1 self-start rounded bg-[#007d8b] px-3 py-2 text-[10px] text-white hover:bg-[#006c78] sm:self-auto">
                     <Icon name="plus" size={11} />Novo item
                 </button>
             </div>
