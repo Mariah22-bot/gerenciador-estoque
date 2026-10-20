@@ -2,7 +2,7 @@
 
 CREATE TABLE IF NOT EXISTS estoque (
   id SERIAL PRIMARY KEY,
-  fonte VARCHAR(100) NOT NULL DEFAULT 'VARIADOS',
+  codigo VARCHAR(100) NOT NULL DEFAULT 'VARIADOS',
   secao VARCHAR(150),
   produto TEXT,
   modelo TEXT,
@@ -26,6 +26,38 @@ ALTER TABLE estoque ALTER COLUMN produto DROP NOT NULL;
 ALTER TABLE estoque ADD COLUMN IF NOT EXISTS sku VARCHAR(80);
 ALTER TABLE estoque ADD COLUMN IF NOT EXISTS unit_price NUMERIC(12, 2) NOT NULL DEFAULT 0 CHECK (unit_price >= 0);
 ALTER TABLE estoque ADD COLUMN IF NOT EXISTS minimum_quantity INTEGER NOT NULL DEFAULT 0 CHECK (minimum_quantity >= 0);
+
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'estoque' AND column_name = 'fonte'
+  ) AND NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'estoque' AND column_name = 'codigo'
+  ) THEN
+    ALTER TABLE public.estoque RENAME COLUMN fonte TO codigo;
+  ELSIF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'estoque' AND column_name = 'fonte'
+  ) AND EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'estoque' AND column_name = 'codigo'
+  ) THEN
+    UPDATE public.estoque
+    SET codigo = CASE
+      WHEN codigo IS NULL OR codigo = '' OR (codigo = 'VARIADOS' AND fonte <> 'VARIADOS') THEN fonte
+      ELSE codigo
+    END;
+    ALTER TABLE public.estoque DROP COLUMN fonte;
+  END IF;
+
+  ALTER TABLE public.estoque
+    ADD COLUMN IF NOT EXISTS codigo VARCHAR(100) NOT NULL DEFAULT 'VARIADOS';
+  UPDATE public.estoque SET codigo = 'VARIADOS' WHERE codigo IS NULL OR codigo = '';
+  ALTER TABLE public.estoque ALTER COLUMN codigo SET DEFAULT 'VARIADOS';
+  ALTER TABLE public.estoque ALTER COLUMN codigo SET NOT NULL;
+END $$;
 
 -- Migra a estrutura anterior preservando IDs, SKUs, preços, mínimos e movimentos.
 -- A tabela antiga é renomeada para manter uma cópia integral dos dados originais.
@@ -62,7 +94,7 @@ BEGIN
   END IF;
 
   INSERT INTO public.estoque (
-    id, fonte, secao, produto, quantidade, sku, unit_price,
+    id, codigo, secao, produto, quantidade, sku, unit_price,
     minimum_quantity, unidade, created_at, updated_at
   )
   SELECT id, 'VARIADOS', category, name, quantity, sku, unit_price,

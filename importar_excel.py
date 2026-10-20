@@ -15,7 +15,7 @@ EXPECTED_REPLACEMENT_PRODUCTS = 252
 
 
 class Product(TypedDict):
-	fonte: str
+	codigo: str
 	secao: str | None
 	produto: str
 	modelo: str | None
@@ -31,7 +31,7 @@ class Product(TypedDict):
 
 
 FIELD_ALIASES = {
-	'fonte': {'fonte', 'source', 'origem'},
+	'codigo': {'codigo', 'code', 'fonte', 'source', 'origem'},
 	'secao': {'secao', 'section', 'categoria', 'category'},
 	'produto': {'produto', 'product', 'nome', 'name', 'nome_produto', 'produto_nome', 'tipo_de_produto', 'descricao', 'description', 'descricao_produto'},
 	'modelo': {'modelo', 'model'},
@@ -47,7 +47,7 @@ FIELD_ALIASES = {
 }
 
 PRODUCT_FIELDS = tuple(field for field in FIELD_ALIASES if field != 'unit_price')
-IDENTITY_FIELDS = ('fonte', 'secao', 'produto', 'modelo', 'cor', 'tamanho')
+IDENTITY_FIELDS = ('codigo', 'secao', 'produto', 'modelo', 'cor', 'tamanho')
 VARIANT_FIELDS = ('produto', 'modelo', 'cor', 'tamanho')
 
 
@@ -189,6 +189,7 @@ def read_products(excel_path: Path = DEFAULT_EXCEL_PATH) -> list[Product]:
 	def append_product(
 		product_name: str,
 		*,
+		code: str | None = None,
 		category: str | None = None,
 		model: str | None = None,
 		color: str | None = None,
@@ -201,7 +202,7 @@ def read_products(excel_path: Path = DEFAULT_EXCEL_PATH) -> list[Product]:
 		notes: str | None = None,
 	) -> None:
 		products.append({
-			'fonte': 'VARIADOS',
+			'codigo': code or 'VARIADOS',
 			'secao': normalize_section(category) if category is not None else normalize_section(section),
 			'produto': product_name,
 			'modelo': model,
@@ -314,7 +315,7 @@ def read_products(excel_path: Path = DEFAULT_EXCEL_PATH) -> list[Product]:
 
 		attributes: dict[str, str | None] = {}
 		for field, column_index in field_columns.items():
-			if field in {'produto', 'modelo', 'fonte', 'secao', 'unidade', 'quantidade', 'unit_price'}:
+			if field in {'produto', 'modelo', 'codigo', 'secao', 'unidade', 'quantidade', 'unit_price'}:
 				continue
 			attributes[field] = values[column_index]
 		quantity = None
@@ -325,9 +326,11 @@ def read_products(excel_path: Path = DEFAULT_EXCEL_PATH) -> list[Product]:
 			notes = notes or quantity_notes
 		unit_price = parse_price(values[field_columns['unit_price']], row_number) if 'unit_price' in field_columns else None
 		unit_value = values[field_columns['unidade']] if 'unidade' in field_columns else None
+		code_value = values[field_columns['codigo']] if 'codigo' in field_columns else None
 		category_value = values[field_columns['secao']] if 'secao' in field_columns else None
 		append_product(
 			product_value,
+			code=code_value,
 			category=category_value,
 			model=model_value,
 			color=attributes.get('cor'),
@@ -381,7 +384,7 @@ def main() -> None:
 					removed_movement_count = cursor.fetchone()[0]
 					cursor.execute('TRUNCATE TABLE stock_movements, estoque RESTART IDENTITY')
 				else:
-					cursor.execute('SELECT id, fonte, secao, produto, modelo, cor, tamanho FROM estoque FOR UPDATE')
+					cursor.execute('SELECT id, codigo, secao, produto, modelo, cor, tamanho FROM estoque FOR UPDATE')
 					for row in cursor.fetchall():
 						product_id, *identity_values = row
 						exact_key = tuple(identity_values)
@@ -463,4 +466,3 @@ def main() -> None:
 
 if __name__ == '__main__':
 	main()
-
