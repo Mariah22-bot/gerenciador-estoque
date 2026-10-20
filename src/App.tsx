@@ -15,7 +15,7 @@ export default function App(): JSX.Element {
 
       <div className="flex-1 flex flex-col min-w-0">
         <Header />
-        <main className="flex-1 overflow-y-auto p-3 pb-20 sm:p-4 sm:pb-20 lg:pb-4">
+        <main className="flex-1 overflow-y-auto p-3 pb-20 sm:p-4 sm:pb-20 lg:pb-4 min-[1400px]:p-6 min-[1400px]:pb-6 min-[1600px]:p-8">
           {activeTab === 'dashboard' && <Dashboard />}
           {activeTab === 'analytics' && <Analytics />}
           {activeTab === 'users' && <Products />}

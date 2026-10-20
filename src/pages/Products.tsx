@@ -223,7 +223,7 @@ export default function Products(): JSX.Element {
     }
 
     return (
-        <div className="mx-auto max-w-[1200px] space-y-3">
+        <div className="mx-auto w-full max-w-[1200px] space-y-3 min-[1400px]:max-w-none">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <h1 className="text-xl font-semibold text-slate-800">Estoque organizado</h1>

@@ -17,11 +17,11 @@ export default function Analytics(): JSX.Element {
             .finally(() => setLoading(false));
     }, []);
 
-    if (loading) return <div className="mx-auto max-w-[1120px] rounded-lg border border-slate-200 bg-white p-8 text-center text-sm text-slate-500">Calculando análises do estoque...</div>;
-    if (error) return <div className="mx-auto max-w-[1120px] rounded-lg border border-rose-100 bg-rose-50 p-8 text-center text-sm text-rose-600">{error}</div>;
+    if (loading) return <div className="mx-auto w-full max-w-[1120px] rounded-lg border border-slate-200 bg-white p-8 text-center text-sm text-slate-500 min-[1400px]:max-w-none">Calculando análises do estoque...</div>;
+    if (error) return <div className="mx-auto w-full max-w-[1120px] rounded-lg border border-rose-100 bg-rose-50 p-8 text-center text-sm text-rose-600 min-[1400px]:max-w-none">{error}</div>;
 
     return (
-        <div className="mx-auto max-w-[1120px] space-y-4">
+        <div className="mx-auto w-full max-w-[1120px] space-y-4 min-[1400px]:max-w-none">
             <div>
                 <h1 className="text-xl font-semibold text-slate-800">Curva ABC e análises</h1>
                 <p className="text-sm text-slate-500">Indicadores calculados a partir das movimentações registradas.</p>

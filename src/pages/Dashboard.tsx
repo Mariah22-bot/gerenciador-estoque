@@ -63,7 +63,7 @@ export default function Dashboard(): JSX.Element {
     const balance = summary.entries - summary.exits;
 
     return (
-        <div className="mx-auto max-w-[1120px] space-y-4">
+        <div className="mx-auto w-full max-w-[1120px] space-y-4 min-[1400px]:max-w-none">
             <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
                 <StatCard title="Produtos cadastrados" value={String(summary.product_count)} change="Dados reais" isPositive={true} icon="box" />
                 <StatCard
