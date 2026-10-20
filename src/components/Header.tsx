@@ -3,7 +3,7 @@ import Icon from './Icon';
 
 export default function Header(): JSX.Element {
     return (
-        <header className="flex h-[42px] items-center justify-between bg-black px-3 text-white sm:px-4">
+        <header className="flex h-[70px] items-center justify-between bg-black px-3 text-white sm:px-4">
             <div />
             <div className="flex items-center gap-4">
                 <div className="relative hidden sm:block">
