@@ -12,11 +12,8 @@ export default function Header(): JSX.Element {
     }, [isDarkMode]);
 
     return (
-        <header className="flex h-[70px] items-center justify-between bg-black px-3 text-white sm:px-4">
-            <div />
+        <header className="flex h-[70px] items-center justify-end bg-black px-3 text-white sm:px-4">
             <div className="flex items-center gap-4">
-                <div className="relative hidden sm:block">
-                </div>
                 <button
                     type="button"
                     onClick={() => setIsDarkMode((current) => !current)}

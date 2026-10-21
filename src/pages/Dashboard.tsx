@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useState, type JSX } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useState, type JSX } from 'react';
 import StatCard from '../components/StatCard';
 import UserTable from '../components/UserTable';
-import AnalyticsChart from '../components/AnalyticsChart';
 import MovementModal from '../components/MovementModal';
 import { inventoryApi, notifyInventoryRefresh, type DashboardSummary, type Movement, type Product } from '../services/api';
+
+const AnalyticsChart = lazy(() => import('../components/AnalyticsChart'));
 
 const emptySummary: DashboardSummary = { product_count: 0, products_without_turnover_count: 0, stock_units: 0, invested_capital: '0', entries: 0, exits: 0 };
 
@@ -103,7 +104,7 @@ export default function Dashboard(): JSX.Element {
                 <StatCard title="Capital imobilizado" value={capital} change="Valor atual" isPositive={true} icon="box" />
                 <StatCard title="Entradas vs. saídas" value={`${summary.entries} / ${summary.exits}`} change={`Saldo ${balance >= 0 ? '+' : ''}${balance}`} isPositive={balance >= 0} icon="exchange" />
             </div>
-            <div className="grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-3"><div className="min-w-0 lg:col-span-2"><AnalyticsChart /></div><div className="min-w-0 rounded-lg border border-slate-200 bg-white p-4"><h2 className="text-sm font-semibold text-slate-800">Mais vendidos vs. mais parados</h2><p className="mb-2 text-xs text-slate-500">Os dados serão calculados a partir das movimentações.</p><p className="py-8 text-center text-xs text-slate-400">Ainda não há movimentações cadastradas.</p></div></div>
+            <div className="grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-3"><div className="min-w-0 lg:col-span-2"><Suspense fallback={<div className="min-h-[253px] rounded-lg border border-slate-200 bg-white p-4 text-center text-xs text-slate-500">Carregando métricas...</div>}><AnalyticsChart /></Suspense></div><div className="min-w-0 rounded-lg border border-slate-200 bg-white p-4"><h2 className="text-sm font-semibold text-slate-800">Mais vendidos vs. mais parados</h2><p className="mb-2 text-xs text-slate-500">Os dados serão calculados a partir das movimentações.</p><p className="py-8 text-center text-xs text-slate-400">Ainda não há movimentações cadastradas.</p></div></div>
             <UserTable
                 movements={movements}
                 loading={loading}

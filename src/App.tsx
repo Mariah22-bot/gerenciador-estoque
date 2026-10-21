@@ -1,10 +1,11 @@
-import { useState, type JSX } from 'react';
+import { lazy, Suspense, useState, type JSX } from 'react';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
-import Dashboard from './pages/Dashboard';
-import Products from './pages/Products';
-import Analytics from './pages/Analytics';
 import type { TabId } from './types/dashboard';
+
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const Products = lazy(() => import('./pages/Products'));
+const Analytics = lazy(() => import('./pages/Analytics'));
 
 export default function App(): JSX.Element {
   const [activeTab, setActiveTab] = useState<TabId>('dashboard');
@@ -16,9 +17,11 @@ export default function App(): JSX.Element {
       <div className="flex-1 flex flex-col min-w-0">
         <Header />
         <main className="flex-1 p-3 pb-20 sm:p-4 sm:pb-20 lg:pb-4 min-[1400px]:p-6 min-[1400px]:pb-6 min-[1600px]:p-8">
-          {activeTab === 'dashboard' && <Dashboard />}
-          {activeTab === 'analytics' && <Analytics />}
-          {activeTab === 'users' && <Products />}
+          <Suspense fallback={<div className="rounded-lg border border-slate-200 bg-white p-8 text-center text-sm text-slate-500">Carregando página...</div>}>
+            {activeTab === 'dashboard' && <Dashboard />}
+            {activeTab === 'analytics' && <Analytics />}
+            {activeTab === 'users' && <Products />}
+          </Suspense>
         </main>
       </div>
     </div>

@@ -166,6 +166,7 @@ inventoryRouter.get('/movements', async (_request, response) => {
              e.produto AS product_name
       FROM stock_movements AS movements
       INNER JOIN estoque AS e ON e.id = movements.product_id
+      WHERE movements.occurred_at >= NOW() - INTERVAL '7 days'
       ORDER BY movements.occurred_at DESC
     `);
 
