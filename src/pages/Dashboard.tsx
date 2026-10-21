@@ -73,7 +73,6 @@ export default function Dashboard(): JSX.Element {
                     isPositive={false}
                     icon="refresh"
                     comparisonLabel=""
-                    detail="Sem movimentação de saída registrada"
                 />
                 <StatCard title="Unidades em estoque" value={summary.stock_units.toLocaleString('pt-BR')} change="Soma das quantidades" isPositive={true} icon="box" comparisonLabel="" />
                 <StatCard title="Capital imobilizado" value={capital} change="Valor atual" isPositive={true} icon="box" />

@@ -1,103 +1,35 @@
 # Gerenciador de estoque
 
-Dashboard de monitoramento do giro de estoque com React, TailwindCSS, Express, TypeScript e PostgreSQL.
+Dashboard de monitoramento de estoque com React, Tailwind CSS, Express, TypeScript e PostgreSQL.
 
-## Backend local
+## Configuração
 
 1. Instale o PostgreSQL e crie um banco chamado `gerenciador_estoque`.
-2. Configure a variável `DATABASE_URL` no arquivo `.env` com os dados de conexão do PostgreSQL. Não compartilhe nem versione esse arquivo.
-3. Inicialize as tabelas:
+2. Configure `DATABASE_URL` no arquivo `.env`. Não versione nem compartilhe esse arquivo.
+3. Instale as dependências com `npm install`.
+4. Inicialize o banco com `npm run db:init`.
 
-  `npm run db:init`
+## Execução
 
-4. Inicie a API:
+Inicie a API e o frontend em terminais separados:
 
-  `npm run server:dev`
-
-A API ficará disponível em `http://localhost:3000`. O endpoint `GET /api/health` verifica a conexão com o banco. Os endpoints `GET /api/products` e `GET /api/movements` consultam os dados de estoque.
-
-`npm run db:init` aplica o esquema em uma transação e não apaga tabelas. Se encontrar o esquema antigo (`products`), migra os produtos e as movimentações para `estoque` e renomeia a tabela original para `products_legacy_archive`, mantendo os dados antigos. SKUs, preços e quantidades mínimas são preservados. Se `products` e `estoque` já tiverem dados ao mesmo tempo, a inicialização é cancelada para evitar uma mesclagem ambígua; faça backup e resolva essa situação antes de continuar.
-
-Para substituir o catálogo pela planilha padronizada atual, faça um backup do banco e execute `python importar_excel.py --replace`. Esse modo só aceita exatamente 252 produtos com preço e sem chaves duplicadas. Ele substitui também as movimentações ativas, pois elas dependem dos IDs dos produtos antigos; o backup preserva o estado anterior.
-
-## Frontend
-
-Inicie o frontend com `npm run dev`.
-
----
-
-## Informações do template Vite
-
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
-
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+```bash
+npm run server:dev
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
+A API fica disponível em `http://localhost:3000`. O endpoint `GET /api/health` verifica a conexão com o banco.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Banco de dados
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+`npm run db:init` aplica o esquema em uma transação e preserva os dados de estoque e movimentações. Se encontrar o esquema antigo (`products`), migra os produtos e movimentações para `estoque` e renomeia a tabela original para `products_legacy_archive`. Se as tabelas antigas e novas já tiverem dados simultaneamente, a inicialização é cancelada para evitar uma mesclagem ambígua.
 
+Para substituir o catálogo pela planilha atual, faça um backup e execute `python importar_excel.py --replace`. A operação substitui também as movimentações ativas, pois elas dependem dos IDs dos produtos. O modo exige 252 produtos, preço preenchido em todos e chaves sem duplicatas.
+
+## Verificações
+
+```bash
+npm run build
+npm run server:typecheck
+npm run lint
 ```

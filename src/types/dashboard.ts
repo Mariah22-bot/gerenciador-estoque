@@ -13,7 +13,6 @@ export interface StatCardProps {
   isPositive: boolean;
   icon: string;
   comparisonLabel?: string;
-  detail?: string;
 }
 
 export type TabId = 'dashboard' | 'analytics' | 'users';

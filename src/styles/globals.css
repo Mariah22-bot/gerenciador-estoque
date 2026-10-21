@@ -2,9 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ==========================================================================
-   1. VARIÁVEIS GLOBAIS & TEMAS (CSS Variables)
-   ========================================================================== */
 :root {
     --background: #f5f7f8;
     --foreground: #1e2b34;
@@ -22,9 +19,6 @@
     --border-color: #334155;
 }
 
-/* ==========================================================================
-   2. REGRAS GLOBAIS E RESET
-   ========================================================================== */
 @layer base {
 
     *,
@@ -49,16 +43,12 @@
         overflow-x: hidden;
     }
 
-    /* Seleção de texto personalizada */
     ::selection {
         background-color: rgba(99, 102, 241, 0.25);
         color: #4f46e5;
     }
 }
 
-/* ==========================================================================
-   3. CUSTOMIZAÇÃO DA BARRA DE ROLAGEM (Scrollbar)
-   ========================================================================== */
 ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
@@ -77,7 +67,6 @@
     background: #94a3b8;
 }
 
-/* Dark mode scrollbar */
 .dark ::-webkit-scrollbar-thumb {
     background: #334155;
 }
@@ -190,28 +179,4 @@
 
 .dark [fill="#dcecef"] {
     fill: #164e63;
-}
-
-/* ==========================================================================
-   4. UTILITÁRIOS CUSTOMIZADOS (Tailwind Layer Utilities)
-   ========================================================================== */
-@layer utilities {
-
-    /* Transição suave padrão para elementos interativos */
-    .transition-default {
-        transition: all 0.2s ease-in-out;
-    }
-
-    /* Efeito de vidro (Glassmorphism) */
-    .glass {
-        background: rgba(255, 255, 255, 0.7);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.18);
-    }
-
-    .dark .glass {
-        background: rgba(15, 23, 42, 0.7);
-        border: 1px solid rgba(255, 255, 255, 0.05);
-    }
 }
