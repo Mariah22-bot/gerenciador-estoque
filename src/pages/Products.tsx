@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent, type JSX } from 'react';
 import Icon from '../components/Icon';
-import { inventoryApi, notifyInventoryRefresh, type Product, type ProductPayload } from '../services/api';
+import { inventoryApi, isDemoMode, notifyInventoryRefresh, type Product, type ProductPayload } from '../services/api';
 
 interface ProductFormProps {
     mode: 'create' | 'edit';
@@ -229,9 +229,9 @@ export default function Products(): JSX.Element {
                     <h1 className="text-xl font-semibold text-slate-800">Estoque organizado</h1>
                     <p className="text-sm text-slate-500">Catálogo por código (SKU), seção e características do item.</p>
                 </div>
-                <button onClick={() => { setEditingProduct(null); setShowForm(true); }} className="flex min-h-10 items-center justify-center gap-1 self-start rounded bg-[#007d8b] px-4 py-2.5 text-xs text-white hover:bg-[#006c78] sm:self-auto">
+                {!isDemoMode && <button onClick={() => { setEditingProduct(null); setShowForm(true); }} className="flex min-h-10 items-center justify-center gap-1 self-start rounded bg-[#007d8b] px-4 py-2.5 text-xs text-white hover:bg-[#006c78] sm:self-auto">
                     <Icon name="plus" size={11} />Novo item
-                </button>
+                </button>}
             </div>
 
             <div className="rounded-lg border border-slate-200 bg-white p-3">
@@ -267,11 +267,11 @@ export default function Products(): JSX.Element {
                                     <th className="px-3 py-2 text-right">Preço unitário</th>
                                     <th className="px-3 py-2">Un.</th>
                                     <th className="px-3 py-2">Composição</th>
-                                    <th className="px-3 py-2 text-right">Ações</th>
+                                    {!isDemoMode && <th className="px-3 py-2 text-right">Ações</th>}
                                 </tr>
                             </thead>
                             <tbody>
-                                {filteredProducts.length === 0 && <tr><td colSpan={11} className="px-3 py-8 text-center text-slate-500">Nenhum item encontrado.</td></tr>}
+                                {filteredProducts.length === 0 && <tr><td colSpan={isDemoMode ? 9 : 10} className="px-3 py-8 text-center text-slate-500">Nenhum item encontrado.</td></tr>}
                                 {filteredProducts.map((product) => (
                                     <tr key={product.id} className="border-b border-slate-100 align-top hover:bg-slate-50">
                                         <td className="px-3 py-2">
@@ -286,14 +286,14 @@ export default function Products(): JSX.Element {
                                         <td className="px-3 py-2 text-right font-medium text-slate-700">{formatPrice(product.unit_price)}</td>
                                         <td className="px-3 py-2">{product.unidade}</td>
                                         <td className="max-w-[180px] px-3 py-2">{product.tecido_composicao || '—'}</td>
-                                        <td className="px-3 py-2">
+                                        {!isDemoMode && <td className="px-3 py-2">
                                             <div className="flex justify-end gap-1">
                                                 <button type="button" onClick={() => { setEditingProduct(product); setShowForm(true); }} className="rounded border border-slate-200 px-3 py-1.5 text-[11px] text-slate-600">Editar</button>
                                                 <button type="button" onClick={() => void deleteProduct(product)} disabled={deletingProductId !== null} className="rounded border border-rose-200 bg-rose-50 px-3 py-1.5 text-[11px] text-rose-600 disabled:cursor-wait disabled:opacity-60">
                                                     {deletingProductId === product.id ? 'Excluindo...' : 'Excluir'}
                                                 </button>
                                             </div>
-                                        </td>
+                                        </td>}
                                     </tr>
                                 ))}
                             </tbody>
@@ -302,7 +302,7 @@ export default function Products(): JSX.Element {
                 )}
             </div>
 
-            {showForm && (
+            {showForm && !isDemoMode && (
                 <ProductForm
                     mode={editingProduct ? 'edit' : 'create'}
                     initialProduct={editingProduct}

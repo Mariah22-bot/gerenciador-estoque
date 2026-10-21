@@ -32,6 +32,12 @@ npm run dev
 
 A API fica disponível em `http://localhost:3000` (ou na porta definida por `PORT`). O endpoint `GET /api/health` verifica a conexão com o banco. O frontend do Vite encaminha as chamadas `/api` para a API local.
 
+## Demonstração pública na Vercel
+
+O build de produção (`npm run build`), usado pela Vercel, força o modo de demonstração: o site mostra somente produtos e movimentações fictícios, não faz chamadas à API nem acessa o banco, e não oferece ações para alterar dados. O aviso de demonstração também aparece na interface. Para visualizar esse modo durante o desenvolvimento local, defina `VITE_DEMO_MODE=true` no `.env`.
+
+Na Vercel, importe o repositório como projeto Vite, use `npm run build` como comando de build e `dist` como diretório de saída. Não configure `DATABASE_URL` no projeto público da Vercel. O servidor Express em `server/` não é publicado pelo build estático do Vite; não o hospede publicamente apontando para o banco real do cliente, pois a API atual não possui autenticação. Se o cliente precisar de uma versão privada conectada ao estoque real, ela deverá ser hospedada separadamente com autenticação e autorização no backend.
+
 ## Banco de dados
 
 `npm run db:init` aplica o esquema em uma transação, preservando produtos e movimentações. Também remove as colunas legadas `codigo` e `fonte` da tabela de estoque. Se encontrar o esquema antigo (`products`), migra produtos e movimentações para `estoque` e renomeia a tabela original para `products_legacy_archive`. Se as tabelas antigas e novas já tiverem dados simultaneamente, a inicialização é cancelada para evitar uma mesclagem ambígua.
