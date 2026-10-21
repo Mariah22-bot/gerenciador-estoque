@@ -40,9 +40,9 @@ export default function App(): JSX.Element {
       <div className="flex-1 flex flex-col min-w-0">
         <Header />
         {isDemoMode && (
-          <div role="status" className="flex flex-col items-center justify-center gap-2 border-b border-amber-200 bg-amber-50 px-4 py-2 text-center text-sm text-amber-900 sm:flex-row">
+          <div role="status" className="demo-banner flex flex-col items-center justify-center gap-2 border-b border-amber-200 bg-amber-50 px-4 py-2 text-center text-sm sm:flex-row">
             <span>Demonstração pública: dados fictícios; suas alterações ficam apenas neste navegador e não acessam o estoque do cliente.</span>
-            <button type="button" onClick={resetDemo} className="shrink-0 rounded border border-amber-300 px-2.5 py-1 text-xs font-medium hover:bg-amber-100">
+            <button type="button" onClick={resetDemo} className="demo-reset-button shrink-0 rounded border border-amber-300 px-2.5 py-1 text-xs font-medium hover:bg-amber-100">
               Restaurar demonstração
             </button>
             {demoResetError && <span role="alert" className="text-xs text-rose-700">{demoResetError}</span>}

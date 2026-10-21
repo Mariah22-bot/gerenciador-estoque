@@ -177,6 +177,28 @@
     color: #fcd34d;
 }
 
+.demo-banner {
+    color: #78350f;
+}
+
+.demo-reset-button {
+    color: #78350f;
+}
+
+.dark .demo-banner {
+    color: #fef3c7;
+    border-color: #b45309;
+}
+
+.dark .demo-reset-button {
+    color: #fef3c7;
+    border-color: #fbbf24;
+}
+
+.dark .demo-reset-button:hover {
+    background-color: #78350f;
+}
+
 .dark [fill="#dcecef"] {
     fill: #164e63;
 }
