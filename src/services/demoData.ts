@@ -1,4 +1,18 @@
-import type { AnalyticsData, DashboardSummary, Movement, Product } from './api';
+import type { AnalyticsData, DashboardSummary, Movement, Product, ProductPayload } from './api';
+
+interface DemoState {
+  products: Product[];
+  movements: Movement[];
+}
+
+interface MovementPayload {
+  productId: number;
+  type: 'entrada' | 'saida';
+  quantity: number;
+  notes?: string;
+}
+
+const storageKey = 'gerenciador-estoque:demo:v1';
 
 const demoProducts: Product[] = [
   {
@@ -58,69 +72,280 @@ const demoMovements: Movement[] = [
   },
 ];
 
-const demoSummary: DashboardSummary = {
-  product_count: demoProducts.length,
-  products_without_turnover_count: 2,
-  stock_units: demoProducts.reduce((total, product) => total + product.quantity, 0),
-  invested_capital: demoProducts.reduce(
-    (total, product) => total + Number(product.unit_price ?? 0) * product.quantity,
-    0,
-  ).toFixed(2),
-  entries: 4,
-  exits: 6,
-};
+function createInitialState(): DemoState {
+  return {
+    products: demoProducts.map((product) => ({ ...product })),
+    movements: demoMovements.map((movement) => ({ ...movement })),
+  };
+}
 
-const demoAnalytics: AnalyticsData = {
-  topProducts: [
-    { name: 'Almofada Nuvem', sku: 'DEMO-005', units_moved: 12 },
-    { name: 'Cortina Aurora', sku: 'DEMO-001', units_moved: 9 },
-    { name: 'Capa de cadeira Jardim', sku: 'DEMO-006', units_moved: 7 },
-    { name: 'Almofada Brisa', sku: 'DEMO-002', units_moved: 5 },
-  ],
-  abc: [
-    { classification: 'A', products: 2 },
-    { classification: 'B', products: 2 },
-    { classification: 'C', products: 2 },
-  ],
-  turnover: [
-    { month: 'Mai', entries: 8, exits: 5 },
-    { month: 'Jun', entries: 6, exits: 9 },
-    { month: 'Jul', entries: 12, exits: 7 },
-    { month: 'Ago', entries: 5, exits: 8 },
-    { month: 'Set', entries: 10, exits: 6 },
-    { month: 'Out', entries: 4, exits: 6 },
-  ],
-  turnoverByCategory: [
-    { category: 'Almofadas', month: 'Mai', entries: 3, exits: 2 },
-    { category: 'Almofadas', month: 'Jun', entries: 2, exits: 4 },
-    { category: 'Almofadas', month: 'Jul', entries: 5, exits: 3 },
-    { category: 'Almofadas', month: 'Ago', entries: 2, exits: 3 },
-    { category: 'Almofadas', month: 'Set', entries: 4, exits: 2 },
-    { category: 'Almofadas', month: 'Out', entries: 2, exits: 2 },
-    { category: 'Capas de cadeira', month: 'Mai', entries: 2, exits: 1 },
-    { category: 'Capas de cadeira', month: 'Jun', entries: 1, exits: 2 },
-    { category: 'Capas de cadeira', month: 'Jul', entries: 3, exits: 1 },
-    { category: 'Capas de cadeira', month: 'Ago', entries: 1, exits: 2 },
-    { category: 'Capas de cadeira', month: 'Set', entries: 2, exits: 1 },
-    { category: 'Capas de cadeira', month: 'Out', entries: 1, exits: 2 },
-    { category: 'Cortinas', month: 'Mai', entries: 3, exits: 2 },
-    { category: 'Cortinas', month: 'Jun', entries: 3, exits: 3 },
-    { category: 'Cortinas', month: 'Jul', entries: 4, exits: 3 },
-    { category: 'Cortinas', month: 'Ago', entries: 2, exits: 3 },
-    { category: 'Cortinas', month: 'Set', entries: 4, exits: 3 },
-    { category: 'Cortinas', month: 'Out', entries: 1, exits: 2 },
-  ],
-};
+function readState(): DemoState {
+  const saved = localStorage.getItem(storageKey);
+  if (saved === null) return createInitialState();
+
+  try {
+    const state: unknown = JSON.parse(saved);
+    if (
+      typeof state !== 'object'
+      || state === null
+      || !('products' in state)
+      || !Array.isArray(state.products)
+      || !('movements' in state)
+      || !Array.isArray(state.movements)
+    ) {
+      throw new Error('Formato de dados inválido.');
+    }
+    return state as DemoState;
+  } catch (error: unknown) {
+    throw new Error('Não foi possível carregar os dados salvos da demonstração.', { cause: error });
+  }
+}
+
+function saveState(state: DemoState): void {
+  localStorage.setItem(storageKey, JSON.stringify(state));
+  window.dispatchEvent(new CustomEvent('inventory:updated'));
+}
+
+function nextId(records: Array<{ id: number }>): number {
+  return records.reduce((maximum, record) => Math.max(maximum, record.id), 0) + 1;
+}
+
+function createMovement(
+  state: DemoState,
+  product: Product,
+  type: Movement['type'],
+  quantity: number,
+  notes?: string,
+): Movement {
+  const movement: Movement = {
+    id: nextId(state.movements),
+    sku: product.sku,
+    product_name: product.produto,
+    type,
+    quantity,
+    occurred_at: new Date().toISOString(),
+    notes: notes?.trim() || null,
+  };
+  state.movements.unshift(movement);
+  return movement;
+}
+
+function validateProductPayload(payload: ProductPayload): void {
+  if (!payload.produto?.trim()) throw new Error('Produto é obrigatório.');
+  const quantity = payload.quantity ?? 0;
+  if (!Number.isInteger(quantity) || quantity < 0) {
+    throw new Error('A quantidade deve ser um número inteiro não negativo.');
+  }
+  const unitPrice = payload.unitPrice ?? 0;
+  if (!Number.isFinite(unitPrice) || unitPrice < 0) {
+    throw new Error('O preço deve ser um número não negativo.');
+  }
+}
+
+function getSummary(state: DemoState): DashboardSummary {
+  const movedOut = new Set(state.movements.filter((movement) => movement.type === 'saida').map((movement) => movement.sku));
+  return {
+    product_count: state.products.length,
+    products_without_turnover_count: state.products.filter((product) => !movedOut.has(product.sku)).length,
+    stock_units: state.products.reduce((total, product) => total + product.quantity, 0),
+    invested_capital: state.products.reduce(
+      (total, product) => total + Number(product.unit_price ?? 0) * product.quantity,
+      0,
+    ).toFixed(2),
+    entries: state.movements.filter((movement) => movement.type === 'entrada').reduce((total, movement) => total + movement.quantity, 0),
+    exits: state.movements.filter((movement) => movement.type === 'saida').reduce((total, movement) => total + movement.quantity, 0),
+  };
+}
+
+function getAnalytics(state: DemoState): AnalyticsData {
+  const now = new Date();
+  const months = Array.from({ length: 6 }, (_, index) => new Date(now.getFullYear(), now.getMonth() - 5 + index, 1));
+  const monthKey = (date: Date): string => `${date.getFullYear()}-${date.getMonth()}`;
+  const monthLabel = (date: Date): string => new Intl.DateTimeFormat('pt-BR', { month: 'short' }).format(date).replace('.', '');
+  const turnover = months.map((month) => {
+    const key = monthKey(month);
+    const monthlyMovements = state.movements.filter((movement) => {
+      const date = new Date(movement.occurred_at);
+      return monthKey(date) === key;
+    });
+    return {
+      month: monthLabel(month),
+      entries: monthlyMovements.filter((movement) => movement.type === 'entrada').reduce((total, movement) => total + movement.quantity, 0),
+      exits: monthlyMovements.filter((movement) => movement.type === 'saida').reduce((total, movement) => total + movement.quantity, 0),
+    };
+  });
+  const turnoverByCategory = state.products.flatMap((product) => months.map((month) => {
+    const key = monthKey(month);
+    const productMovements = state.movements.filter((movement) => {
+      return movement.sku === product.sku && monthKey(new Date(movement.occurred_at)) === key;
+    });
+    return {
+      category: product.secao || 'Sem seção',
+      month: monthLabel(month),
+      entries: productMovements.filter((movement) => movement.type === 'entrada').reduce((total, movement) => total + movement.quantity, 0),
+      exits: productMovements.filter((movement) => movement.type === 'saida').reduce((total, movement) => total + movement.quantity, 0),
+    };
+  }));
+  const unitsBySku = new Map<string, number>();
+  for (const movement of state.movements) {
+    if (movement.type === 'saida') {
+      unitsBySku.set(movement.sku, (unitsBySku.get(movement.sku) ?? 0) + movement.quantity);
+    }
+  }
+  const topProducts = state.products
+    .map((product) => ({ name: product.produto, sku: product.sku, units_moved: unitsBySku.get(product.sku) ?? 0 }))
+    .filter((product) => product.units_moved > 0)
+    .sort((a, b) => b.units_moved - a.units_moved)
+    .slice(0, 5);
+
+  const valueByProduct = state.products
+    .map((product) => ({
+      value: (unitsBySku.get(product.sku) ?? 0) * Number(product.unit_price ?? 0),
+    }))
+    .sort((a, b) => b.value - a.value);
+  const totalValue = valueByProduct.reduce((total, product) => total + product.value, 0);
+  let accumulatedValue = 0;
+  const abc = { A: 0, B: 0, C: 0 };
+  for (const product of valueByProduct) {
+    accumulatedValue += product.value;
+    const classification = totalValue === 0 || accumulatedValue / totalValue > 0.95
+      ? 'C'
+      : accumulatedValue / totalValue > 0.8
+        ? 'B'
+        : 'A';
+    abc[classification] += 1;
+  }
+
+  return {
+    topProducts,
+    abc: (['A', 'B', 'C'] as const).map((classification) => ({ classification, products: abc[classification] })),
+    turnover,
+    turnoverByCategory,
+  };
+}
 
 export const demoData = {
-  getProducts: (): Product[] => demoProducts.map((product) => ({ ...product })),
-  getMovements: (): Movement[] => demoMovements.map((movement) => ({ ...movement })),
-  getSummary: (): DashboardSummary => ({ ...demoSummary }),
-  getAnalytics: (): AnalyticsData => ({
-    ...demoAnalytics,
-    topProducts: demoAnalytics.topProducts.map((product) => ({ ...product })),
-    abc: demoAnalytics.abc.map((entry) => ({ ...entry })),
-    turnover: demoAnalytics.turnover.map((entry) => ({ ...entry })),
-    turnoverByCategory: demoAnalytics.turnoverByCategory.map((entry) => ({ ...entry })),
-  }),
+  getProducts: (): Product[] => readState().products.map((product) => ({ ...product })),
+  getMovements: (): Movement[] => readState().movements
+    .filter((movement) => Date.now() - new Date(movement.occurred_at).getTime() <= 7 * 24 * 60 * 60 * 1000)
+    .map((movement) => ({ ...movement })),
+  getSummary: (): DashboardSummary => getSummary(readState()),
+  getAnalytics: (): AnalyticsData => getAnalytics(readState()),
+  createProduct: (payload: ProductPayload): Product => {
+    validateProductPayload(payload);
+    const state = readState();
+    const productId = nextId(state.products);
+    const nextSku = state.products.reduce((maximum, product) => {
+      const match = /^DEMO-(\d+)$/.exec(product.sku);
+      return match ? Math.max(maximum, Number(match[1])) : maximum;
+    }, 0) + 1;
+    const product: Product = {
+      id: productId,
+      sku: `DEMO-${String(nextSku).padStart(3, '0')}`,
+      name: payload.produto.trim(),
+      category: payload.secao?.trim() || null,
+      quantity: payload.quantity ?? 0,
+      unit_price: (payload.unitPrice ?? 0).toFixed(2),
+      minimum_quantity: 0,
+      secao: payload.secao?.trim() || null,
+      produto: payload.produto.trim(),
+      modelo: payload.modelo?.trim() || null,
+      cor: payload.cor?.trim() || null,
+      tamanho: payload.tamanho?.trim() || null,
+      unidade: payload.unidade?.trim() || 'un',
+      tecido_composicao: payload.tecidoComposicao?.trim() || null,
+      item: payload.item?.trim() || null,
+      medida: payload.medida?.trim() || null,
+      observacoes: payload.observacoes?.trim() || null,
+    };
+    state.products.push(product);
+    if (product.quantity > 0) {
+      createMovement(state, product, 'entrada', product.quantity, 'Estoque inicial informado no cadastro do produto.');
+    }
+    saveState(state);
+    return { ...product };
+  },
+  updateProduct: (id: number, payload: ProductPayload): Product => {
+    validateProductPayload(payload);
+    const state = readState();
+    const index = state.products.findIndex((product) => product.id === id);
+    if (index === -1) throw new Error('Produto não encontrado.');
+    const current = state.products[index];
+    const quantity = payload.quantity ?? 0;
+    const updated: Product = {
+      ...current,
+      name: payload.produto.trim(),
+      category: payload.secao?.trim() || null,
+      quantity,
+      unit_price: (payload.unitPrice ?? 0).toFixed(2),
+      secao: payload.secao?.trim() || null,
+      produto: payload.produto.trim(),
+      modelo: payload.modelo?.trim() || null,
+      cor: payload.cor?.trim() || null,
+      tamanho: payload.tamanho?.trim() || null,
+      unidade: payload.unidade?.trim() || 'un',
+      tecido_composicao: payload.tecidoComposicao?.trim() || null,
+      item: payload.item?.trim() || null,
+      medida: payload.medida?.trim() || null,
+      observacoes: payload.observacoes?.trim() || null,
+    };
+    state.products[index] = updated;
+    const quantityDifference = quantity - current.quantity;
+    if (quantityDifference !== 0) {
+      createMovement(
+        state,
+        updated,
+        quantityDifference > 0 ? 'entrada' : 'saida',
+        Math.abs(quantityDifference),
+        'Ajuste de estoque realizado pela edição do produto.',
+      );
+    }
+    saveState(state);
+    return { ...updated };
+  },
+  deleteProduct: (id: number): { success: true } => {
+    const state = readState();
+    const product = state.products.find((item) => item.id === id);
+    if (!product) throw new Error('Produto não encontrado.');
+    const hasMovements = state.movements.some((movement) => movement.sku === product.sku);
+    if (product.quantity > 0 || hasMovements) {
+      throw new Error('Produto com estoque ou histórico de movimentações não pode ser excluído. Zere o estoque e mantenha produtos com histórico para preservar os registros.');
+    }
+    state.products = state.products.filter((item) => item.id !== id);
+    saveState(state);
+    return { success: true };
+  },
+  createMovement: (payload: MovementPayload): Movement => {
+    const state = readState();
+    if (!Number.isInteger(payload.productId) || payload.productId <= 0) throw new Error('Identificador do produto inválido.');
+    if (payload.type !== 'entrada' && payload.type !== 'saida') throw new Error('Tipo de movimentação inválido.');
+    const product = state.products.find((item) => item.id === payload.productId);
+    if (!product) throw new Error('Produto não encontrado.');
+    if (!Number.isInteger(payload.quantity) || payload.quantity <= 0) throw new Error('A quantidade deve ser um número inteiro positivo.');
+    if (payload.type === 'saida' && product.quantity < payload.quantity) throw new Error('Estoque insuficiente para esta saída.');
+    product.quantity += payload.type === 'entrada' ? payload.quantity : -payload.quantity;
+    const movement = createMovement(state, product, payload.type, payload.quantity, payload.notes);
+    saveState(state);
+    return { ...movement };
+  },
+  deleteMovement: (id: number): { success: true } => {
+    const state = readState();
+    if (!Number.isInteger(id) || id <= 0) throw new Error('Identificador da movimentação inválido.');
+    const movementIndex = state.movements.findIndex((item) => item.id === id);
+    if (movementIndex === -1) throw new Error('Movimentação não encontrada.');
+    const movement = state.movements[movementIndex];
+    const product = state.products.find((item) => item.sku === movement.sku);
+    if (!product) throw new Error('Produto da movimentação não encontrado.');
+    if (movement.type === 'entrada' && product.quantity < movement.quantity) {
+      throw new Error('Esta entrada não pode ser removida porque o estoque atual é menor que a quantidade registrada.');
+    }
+    product.quantity += movement.type === 'entrada' ? -movement.quantity : movement.quantity;
+    state.movements.splice(movementIndex, 1);
+    saveState(state);
+    return { success: true };
+  },
+  reset: (): void => {
+    localStorage.removeItem(storageKey);
+    window.dispatchEvent(new CustomEvent('inventory:updated'));
+  },
 };

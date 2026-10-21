@@ -111,9 +111,8 @@ export default function Dashboard(): JSX.Element {
                 error={error}
                 onNewMovement={() => setShowMovementModal(true)}
                 onDeleteMovement={handleMovementDelete}
-                readOnly={isDemoMode}
             />
-            {showMovementModal && !isDemoMode && <MovementModal products={products} onClose={() => setShowMovementModal(false)} onSubmit={handleMovementSubmit} />}
+            {showMovementModal && <MovementModal products={products} onClose={() => setShowMovementModal(false)} onSubmit={handleMovementSubmit} />}
         </div>
     );
 }

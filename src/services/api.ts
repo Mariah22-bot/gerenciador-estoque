@@ -89,36 +89,36 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 }
 
 export const inventoryApi = {
-  getSummary: () => isDemoMode ? Promise.resolve(demoData.getSummary()) : request<DashboardSummary>('/api/dashboard/summary'),
-  getMovements: () => isDemoMode ? Promise.resolve(demoData.getMovements()) : request<Movement[]>('/api/movements'),
-  getProducts: () => isDemoMode ? Promise.resolve(demoData.getProducts()) : request<Product[]>('/api/products'),
+  getSummary: () => isDemoMode ? Promise.resolve().then(() => demoData.getSummary()) : request<DashboardSummary>('/api/dashboard/summary'),
+  getMovements: () => isDemoMode ? Promise.resolve().then(() => demoData.getMovements()) : request<Movement[]>('/api/movements'),
+  getProducts: () => isDemoMode ? Promise.resolve().then(() => demoData.getProducts()) : request<Product[]>('/api/products'),
   createProduct: (payload: ProductPayload) => isDemoMode
-    ? Promise.reject(new Error('O modo de demonstração é somente para visualização.'))
+    ? Promise.resolve().then(() => demoData.createProduct(payload))
     : request<Product>('/api/products', {
       method: 'POST',
       body: JSON.stringify(payload),
     }),
   updateProduct: (id: number, payload: ProductPayload) => isDemoMode
-    ? Promise.reject(new Error('O modo de demonstração é somente para visualização.'))
+    ? Promise.resolve().then(() => demoData.updateProduct(id, payload))
     : request<Product>(`/api/products/${id}`, {
       method: 'PUT',
       body: JSON.stringify(payload),
     }),
   deleteProduct: (id: number) => isDemoMode
-    ? Promise.reject(new Error('O modo de demonstração é somente para visualização.'))
+    ? Promise.resolve().then(() => demoData.deleteProduct(id))
     : request<{ success: true }>(`/api/products/${id}`, {
       method: 'DELETE',
     }),
   createMovement: (payload: { productId: number; type: 'entrada' | 'saida'; quantity: number; notes?: string }) => isDemoMode
-    ? Promise.reject(new Error('O modo de demonstração é somente para visualização.'))
+    ? Promise.resolve().then(() => demoData.createMovement(payload))
     : request<Movement>('/api/movements', {
       method: 'POST',
       body: JSON.stringify(payload),
     }),
   deleteMovement: (id: number) => isDemoMode
-    ? Promise.reject(new Error('O modo de demonstração é somente para visualização.'))
+    ? Promise.resolve().then(() => demoData.deleteMovement(id))
     : request<{ success: true }>(`/api/movements/${id}`, {
       method: 'DELETE',
     }),
-  getAnalytics: () => isDemoMode ? Promise.resolve(demoData.getAnalytics()) : request<AnalyticsData>('/api/analytics'),
+  getAnalytics: () => isDemoMode ? Promise.resolve().then(() => demoData.getAnalytics()) : request<AnalyticsData>('/api/analytics'),
 };

@@ -34,7 +34,7 @@ A API fica disponível em `http://localhost:3000` (ou na porta definida por `POR
 
 ## Demonstração pública na Vercel
 
-O build de produção (`npm run build`), usado pela Vercel, força o modo de demonstração: o site mostra somente produtos e movimentações fictícios, não faz chamadas à API nem acessa o banco, e não oferece ações para alterar dados. O aviso de demonstração também aparece na interface. Para visualizar esse modo durante o desenvolvimento local, defina `VITE_DEMO_MODE=true` no `.env`.
+O build de produção (`npm run build`), usado pela Vercel, força o modo de demonstração: o site usa somente produtos e movimentações fictícios, não faz chamadas à API nem acessa o banco. Visitantes podem cadastrar, editar e excluir produtos e movimentações de demonstração. Essas alterações ficam no armazenamento local do navegador, persistem após recarregar a página e são independentes para cada navegador/dispositivo; elas não são enviadas ao servidor nem compartilhadas com outros visitantes. O botão **Restaurar demonstração** apaga as alterações locais e repõe os dados fictícios iniciais. O aviso de demonstração aparece na interface. Para visualizar esse modo durante o desenvolvimento local, defina `VITE_DEMO_MODE=true` no `.env`.
 
 Na Vercel, importe o repositório como projeto Vite, use `npm run build` como comando de build e `dist` como diretório de saída. Não configure `DATABASE_URL` no projeto público da Vercel. O servidor Express em `server/` não é publicado pelo build estático do Vite; não o hospede publicamente apontando para o banco real do cliente, pois a API atual não possui autenticação. Se o cliente precisar de uma versão privada conectada ao estoque real, ela deverá ser hospedada separadamente com autenticação e autorização no backend.
 
