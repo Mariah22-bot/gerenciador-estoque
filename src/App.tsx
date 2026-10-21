@@ -1,8 +1,10 @@
 import { lazy, Suspense, useEffect, useState, type JSX } from 'react';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
+import Login from './components/Login';
 import { isDemoMode } from './services/api';
 import { demoData } from './services/demoData';
+import { useAuth } from './services/useAuth';
 import type { TabId } from './types/dashboard';
 
 const Dashboard = lazy(() => import('./pages/Dashboard'));
@@ -10,6 +12,7 @@ const Products = lazy(() => import('./pages/Products'));
 const Analytics = lazy(() => import('./pages/Analytics'));
 
 export default function App(): JSX.Element {
+  const { session, loading: authLoading, error: authError, signOut } = useAuth();
   const [activeTab, setActiveTab] = useState<TabId>('dashboard');
   const [demoResetError, setDemoResetError] = useState<string | null>(null);
 
@@ -33,12 +36,24 @@ export default function App(): JSX.Element {
     }
   }
 
+  if (!isDemoMode && authLoading) {
+    return <div className="flex min-h-screen items-center justify-center bg-[#f5f7f8] text-sm text-slate-600">Validando acesso...</div>;
+  }
+
+  if (!isDemoMode && !session) {
+    return <Login />;
+  }
+
   return (
     <div className="flex min-h-screen flex-col bg-[#f5f7f8] font-sans min-[1025px]:flex-row">
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
 
       <div className="flex-1 flex flex-col min-w-0">
-        <Header />
+        <Header
+          userEmail={!isDemoMode ? session?.user.email ?? undefined : undefined}
+          onSignOut={!isDemoMode ? () => { void signOut(); } : undefined}
+        />
+        {!isDemoMode && authError && <p role="alert" className="border-b border-rose-200 bg-rose-50 px-4 py-2 text-center text-xs text-rose-700">{authError}</p>}
         {isDemoMode && (
           <div role="status" className="demo-banner flex flex-col items-center justify-center gap-2 border-b border-amber-200 bg-amber-50 px-4 py-2 text-center text-sm sm:flex-row">
             <span>Demonstração pública: dados fictícios; suas alterações ficam apenas neste navegador e não acessam o estoque do cliente.</span>

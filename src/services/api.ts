@@ -1,4 +1,5 @@
 import { demoData } from './demoData';
+import { supabase } from './supabase';
 
 export interface Movement {
   id: number;
@@ -62,7 +63,8 @@ export type ProductPayload = {
   observacoes?: string;
 };
 
-export const isDemoMode = import.meta.env.PROD || import.meta.env.VITE_DEMO_MODE === 'true';
+export const isDemoMode = import.meta.env.VITE_DEMO_MODE === 'true'
+  || (import.meta.env.PROD && import.meta.env.VITE_DEMO_MODE !== 'false');
 
 export function notifyInventoryRefresh(): void {
   if (typeof window !== 'undefined') {
@@ -71,13 +73,27 @@ export function notifyInventoryRefresh(): void {
 }
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
+  const headers = new Headers(options?.headers);
+  headers.set('Content-Type', 'application/json');
+
+  if (!isDemoMode) {
+    if (!supabase) throw new Error('A autenticação não está configurada.');
+    const { data, error } = await supabase.auth.getSession();
+    if (error) throw new Error('Não foi possível validar a sessão.');
+    if (!data.session) throw new Error('Faça login para acessar o estoque.');
+    headers.set('Authorization', `Bearer ${data.session.access_token}`);
+  }
+
   const response = await fetch(path, {
-    headers: { 'Content-Type': 'application/json' },
     ...options,
+    headers,
   });
 
   if (!response.ok) {
     const body = await response.json().catch(() => ({})) as { error?: string };
+    if (response.status === 401 && !isDemoMode && supabase) {
+      await supabase.auth.signOut();
+    }
     throw new Error(body.error ?? 'Não foi possível concluir a requisição.');
   }
 
