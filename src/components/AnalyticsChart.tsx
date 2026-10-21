@@ -23,8 +23,26 @@ export default function AnalyticsChart(): JSX.Element {
     }, []);
 
     useEffect(() => {
-        void loadAnalytics();
-    }, [loadAnalytics]);
+        let active = true;
+
+        inventoryApi.getAnalytics()
+            .then((nextData) => {
+                if (!active) return;
+                setData(nextData);
+                setError(null);
+            })
+            .catch((requestError: unknown) => {
+                if (!active) return;
+                setError(requestError instanceof Error ? requestError.message : 'Não foi possível carregar as métricas.');
+            })
+            .finally(() => {
+                if (active) setLoading(false);
+            });
+
+        return () => {
+            active = false;
+        };
+    }, []);
 
     useEffect(() => {
         const handleInventoryUpdate = (): void => {

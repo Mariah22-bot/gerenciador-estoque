@@ -33,24 +33,20 @@ function formatPrice(value: string | undefined): string {
 }
 
 function ProductForm({ mode, initialProduct, onClose, onSubmit }: ProductFormProps): JSX.Element {
-    const [form, setForm] = useState<ProductPayload>(emptyPayload);
+    const [form, setForm] = useState<ProductPayload>(() => initialProduct ? {
+        secao: initialProduct.secao ?? '',
+        produto: initialProduct.produto,
+        modelo: initialProduct.modelo ?? '',
+        cor: initialProduct.cor ?? '',
+        tamanho: initialProduct.tamanho ?? '',
+        quantity: initialProduct.quantity,
+        unitPrice: Number(initialProduct.unit_price ?? 0),
+        unidade: initialProduct.unidade,
+        tecidoComposicao: initialProduct.tecido_composicao ?? '',
+        item: initialProduct.item ?? '',
+    } : emptyPayload);
     const [error, setError] = useState<string | null>(null);
     const [saving, setSaving] = useState(false);
-
-    useEffect(() => {
-        setForm(initialProduct ? {
-            secao: initialProduct.secao ?? '',
-            produto: initialProduct.produto,
-            modelo: initialProduct.modelo ?? '',
-            cor: initialProduct.cor ?? '',
-            tamanho: initialProduct.tamanho ?? '',
-            quantity: initialProduct.quantity,
-            unitPrice: Number(initialProduct.unit_price ?? 0),
-            unidade: initialProduct.unidade,
-            tecidoComposicao: initialProduct.tecido_composicao ?? '',
-            item: initialProduct.item ?? '',
-        } : emptyPayload);
-    }, [initialProduct]);
 
     function updateField(field: keyof ProductPayload, value: string | number): void {
         setForm((current) => ({ ...current, [field]: value }));
@@ -150,8 +146,10 @@ export default function Products(): JSX.Element {
     const loadProducts = useCallback(async (): Promise<void> => {
         setLoading(true);
         setError(null);
+
         try {
-            setProducts(await inventoryApi.getProducts());
+            const nextProducts = await inventoryApi.getProducts();
+            setProducts(nextProducts);
         } catch (requestError: unknown) {
             setError(requestError instanceof Error ? requestError.message : 'Não foi possível carregar os produtos.');
         } finally {
@@ -160,8 +158,26 @@ export default function Products(): JSX.Element {
     }, []);
 
     useEffect(() => {
-        void loadProducts();
-    }, [loadProducts]);
+        let active = true;
+
+        inventoryApi.getProducts()
+            .then((nextProducts) => {
+                if (!active) return;
+                setProducts(nextProducts);
+                setError(null);
+            })
+            .catch((requestError: unknown) => {
+                if (!active) return;
+                setError(requestError instanceof Error ? requestError.message : 'Não foi possível carregar os produtos.');
+            })
+            .finally(() => {
+                if (active) setLoading(false);
+            });
+
+        return () => {
+            active = false;
+        };
+    }, []);
 
     useEffect(() => {
         const handleUpdate = (): void => { void loadProducts(); };

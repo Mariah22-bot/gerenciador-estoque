@@ -18,6 +18,7 @@ export default function Dashboard(): JSX.Element {
     const loadDashboard = useCallback(async (): Promise<void> => {
         setError(null);
         setLoading(true);
+
         try {
             const [nextSummary, nextMovements, nextProducts] = await Promise.all([
                 inventoryApi.getSummary(),
@@ -35,8 +36,32 @@ export default function Dashboard(): JSX.Element {
     }, []);
 
     useEffect(() => {
-        void loadDashboard();
-    }, [loadDashboard]);
+        let active = true;
+
+        Promise.all([
+            inventoryApi.getSummary(),
+            inventoryApi.getMovements(),
+            inventoryApi.getProducts(),
+        ])
+            .then(([nextSummary, nextMovements, nextProducts]) => {
+                if (!active) return;
+                setSummary(nextSummary);
+                setMovements(nextMovements);
+                setProducts(nextProducts);
+                setError(null);
+            })
+            .catch((requestError: unknown) => {
+                if (!active) return;
+                setError(requestError instanceof Error ? requestError.message : 'Não foi possível carregar o dashboard.');
+            })
+            .finally(() => {
+                if (active) setLoading(false);
+            });
+
+        return () => {
+            active = false;
+        };
+    }, []);
 
     useEffect(() => {
         const handleInventoryUpdate = (): void => {
