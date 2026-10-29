@@ -1,12 +1,7 @@
 import { useEffect, useState, type JSX } from 'react';
 import Icon from './Icon';
 
-interface HeaderProps {
-    userEmail?: string;
-    onSignOut?: () => void;
-}
-
-export default function Header({ userEmail, onSignOut }: HeaderProps): JSX.Element {
+export default function Header(): JSX.Element {
     const [isDarkMode, setIsDarkMode] = useState(
         () => window.localStorage.getItem('theme') === 'dark',
     );
@@ -32,14 +27,6 @@ export default function Header({ userEmail, onSignOut }: HeaderProps): JSX.Eleme
                     <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#087f8c] text-[10px]">MFF</div>
                     <span className="text-xs">MFF ENXOVAIS</span>
                 </div>
-                {userEmail && onSignOut && (
-                    <div className="flex items-center gap-2 border-l border-slate-700 pl-3">
-                        <span className="hidden max-w-48 truncate text-xs text-slate-300 sm:inline">{userEmail}</span>
-                        <button type="button" onClick={onSignOut} className="rounded px-2 py-1 text-xs text-slate-300 hover:bg-slate-800 hover:text-white">
-                            Sair
-                        </button>
-                    </div>
-                )}
             </div>
         </header>
     );

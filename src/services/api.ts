@@ -1,6 +1,3 @@
-import { demoData } from './demoData';
-import { supabase } from './supabase';
-
 export interface Movement {
   id: number;
   sku: string;
@@ -63,9 +60,6 @@ export type ProductPayload = {
   observacoes?: string;
 };
 
-export const isDemoMode = import.meta.env.VITE_DEMO_MODE === 'true'
-  || (import.meta.env.PROD && import.meta.env.VITE_DEMO_MODE !== 'false');
-
 export function notifyInventoryRefresh(): void {
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent('inventory:updated'));
@@ -76,14 +70,6 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const headers = new Headers(options?.headers);
   headers.set('Content-Type', 'application/json');
 
-  if (!isDemoMode) {
-    if (!supabase) throw new Error('A autenticação não está configurada.');
-    const { data, error } = await supabase.auth.getSession();
-    if (error) throw new Error('Não foi possível validar a sessão.');
-    if (!data.session) throw new Error('Faça login para acessar o estoque.');
-    headers.set('Authorization', `Bearer ${data.session.access_token}`);
-  }
-
   const response = await fetch(path, {
     ...options,
     headers,
@@ -91,9 +77,6 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 
   if (!response.ok) {
     const body = await response.json().catch(() => ({})) as { error?: string };
-    if (response.status === 401 && !isDemoMode && supabase) {
-      await supabase.auth.signOut();
-    }
     throw new Error(body.error ?? 'Não foi possível concluir a requisição.');
   }
 
@@ -105,36 +88,26 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 }
 
 export const inventoryApi = {
-  getSummary: () => isDemoMode ? Promise.resolve().then(() => demoData.getSummary()) : request<DashboardSummary>('/api/dashboard/summary'),
-  getMovements: () => isDemoMode ? Promise.resolve().then(() => demoData.getMovements()) : request<Movement[]>('/api/movements'),
-  getProducts: () => isDemoMode ? Promise.resolve().then(() => demoData.getProducts()) : request<Product[]>('/api/products'),
-  createProduct: (payload: ProductPayload) => isDemoMode
-    ? Promise.resolve().then(() => demoData.createProduct(payload))
-    : request<Product>('/api/products', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    }),
-  updateProduct: (id: number, payload: ProductPayload) => isDemoMode
-    ? Promise.resolve().then(() => demoData.updateProduct(id, payload))
-    : request<Product>(`/api/products/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(payload),
-    }),
-  deleteProduct: (id: number) => isDemoMode
-    ? Promise.resolve().then(() => demoData.deleteProduct(id))
-    : request<{ success: true }>(`/api/products/${id}`, {
-      method: 'DELETE',
-    }),
-  createMovement: (payload: { productId: number; type: 'entrada' | 'saida'; quantity: number; notes?: string }) => isDemoMode
-    ? Promise.resolve().then(() => demoData.createMovement(payload))
-    : request<Movement>('/api/movements', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    }),
-  deleteMovement: (id: number) => isDemoMode
-    ? Promise.resolve().then(() => demoData.deleteMovement(id))
-    : request<{ success: true }>(`/api/movements/${id}`, {
-      method: 'DELETE',
-    }),
-  getAnalytics: () => isDemoMode ? Promise.resolve().then(() => demoData.getAnalytics()) : request<AnalyticsData>('/api/analytics'),
+  getSummary: () => request<DashboardSummary>('/api/dashboard/summary'),
+  getMovements: () => request<Movement[]>('/api/movements'),
+  getProducts: () => request<Product[]>('/api/products'),
+  createProduct: (payload: ProductPayload) => request<Product>('/api/products', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  }),
+  updateProduct: (id: number, payload: ProductPayload) => request<Product>(`/api/products/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  }),
+  deleteProduct: (id: number) => request<{ success: true }>(`/api/products/${id}`, {
+    method: 'DELETE',
+  }),
+  createMovement: (payload: { productId: number; type: 'entrada' | 'saida'; quantity: number; notes?: string }) => request<Movement>('/api/movements', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  }),
+  deleteMovement: (id: number) => request<{ success: true }>(`/api/movements/${id}`, {
+    method: 'DELETE',
+  }),
+  getAnalytics: () => request<AnalyticsData>('/api/analytics'),
 };

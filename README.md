@@ -30,20 +30,13 @@ npm run server:dev
 npm run dev
 ```
 
-A API fica disponível em `http://localhost:3000` (ou na porta definida por `PORT`). Todas as rotas `/api`, inclusive `/api/health`, exigem uma sessão Supabase válida e uma conta listada em `AUTHORIZED_EMAILS`. O frontend do Vite encaminha as chamadas `/api` para a API local.
+A API fica disponível em `http://localhost:3000` (ou na porta definida por `PORT`). O endpoint `GET /api/health` verifica a conexão com o banco. O frontend do Vite encaminha as chamadas `/api` para a API local.
 
-## Demonstração pública na Vercel
+## Uso local
 
-O modo demo usa somente dados fictícios. Visitantes podem alterá-los, mas as mudanças ficam no armazenamento local do navegador e não são enviadas ao backend. O botão **Restaurar demonstração** repõe os dados iniciais. Em produção, o modo demo é o padrão seguro; para habilitar a aplicação real, defina explicitamente `VITE_DEMO_MODE=false`.
+A API local usa o PostgreSQL indicado por `DATABASE_URL` no arquivo `.env`. Os dados não são enviados à Vercel: a pasta `api` não contém uma função serverless e o proxy para `localhost:3000` em `vite.config.ts` só funciona durante o desenvolvimento local.
 
-O Vercel serve o frontend estático de `dist` e a função Express em `api/[...route].ts`. Para manter a demonstração pública separada, use projetos Vercel distintos conectados ao mesmo repositório:
-
-- **Demonstração pública:** `VITE_DEMO_MODE=true`; não configure `API_ENABLED`, `DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` nem `AUTHORIZED_EMAILS`.
-- **Aplicação privada do cliente:** `VITE_DEMO_MODE=false`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `API_ENABLED=true`, `DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` e `AUTHORIZED_EMAILS`. Configure o build como `npm run build` e a saída estática como `dist`.
-
-`API_ENABLED` faz a função responder 404 quando não estiver habilitada. Mesmo no projeto privado, a API valida o token do Supabase e confere o e-mail em `AUTHORIZED_EMAILS`; proteger apenas a página da Vercel não substitui essas verificações. No Supabase, desative o cadastro público e crie apenas os usuários autorizados. Nunca coloque `DATABASE_URL` ou uma chave `service_role` em variáveis `VITE_*`. Configure Deployment Protection da Vercel como camada adicional se disponível no plano, mantendo o login da aplicação habilitado.
-
-Para o banco de produção, crie um projeto PostgreSQL hospedado no Supabase e migre uma cópia dos dados locais após fazer backup. Use a connection string do pooler recomendada pelo Supabase para funções serverless. Mantenha o banco local separado para desenvolvimento. A publicação e a migração exigem configurar as credenciais nos respectivos painéis; não use a senha local nem publique o arquivo `.env`.
+Para ver os produtos neste computador, mantenha o PostgreSQL em execução e inicie `npm run server:dev` e `npm run dev` em terminais separados. Acesse o endereço local mostrado pelo Vite, normalmente `http://localhost:5173`. A publicação estática na Vercel não terá acesso a esta API ou banco local.
 
 ## Banco de dados
 

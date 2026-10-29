@@ -271,7 +271,7 @@ export default function Products(): JSX.Element {
                                 </tr>
                             </thead>
                             <tbody>
-                                {filteredProducts.length === 0 && <tr><td colSpan={10} className="px-3 py-8 text-center text-slate-500">Nenhum item encontrado.</td></tr>}
+                                {filteredProducts.length === 0 && <tr><td colSpan={11} className="px-3 py-8 text-center text-slate-500">Nenhum item encontrado.</td></tr>}
                                 {filteredProducts.map((product) => (
                                     <tr key={product.id} className="border-b border-slate-100 align-top hover:bg-slate-50">
                                         <td className="px-3 py-2">

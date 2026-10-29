@@ -2,7 +2,7 @@ import { lazy, Suspense, useCallback, useEffect, useState, type JSX } from 'reac
 import StatCard from '../components/StatCard';
 import UserTable from '../components/UserTable';
 import MovementModal from '../components/MovementModal';
-import { inventoryApi, isDemoMode, notifyInventoryRefresh, type DashboardSummary, type Movement, type Product } from '../services/api';
+import { inventoryApi, notifyInventoryRefresh, type DashboardSummary, type Movement, type Product } from '../services/api';
 
 const AnalyticsChart = lazy(() => import('../components/AnalyticsChart'));
 
@@ -91,7 +91,7 @@ export default function Dashboard(): JSX.Element {
     return (
         <div className="mx-auto w-full max-w-[1120px] space-y-4 min-[1400px]:max-w-none">
             <div className="grid grid-cols-2 gap-2 lg:grid-cols-5">
-                <StatCard title="Produtos cadastrados" value={String(summary.product_count)} change={isDemoMode ? 'Dados fictícios' : 'Dados reais'} isPositive={true} icon="box" />
+                <StatCard title="Produtos cadastrados" value={String(summary.product_count)} change="Dados reais" isPositive={true} icon="box" />
                 <StatCard
                     title="Produtos sem giro"
                     value={String(summary.products_without_turnover_count)}
@@ -104,7 +104,7 @@ export default function Dashboard(): JSX.Element {
                 <StatCard title="Capital imobilizado" value={capital} change="Valor atual" isPositive={true} icon="box" />
                 <StatCard title="Entradas vs. saídas" value={`${summary.entries} / ${summary.exits}`} change={`Saldo ${balance >= 0 ? '+' : ''}${balance}`} isPositive={balance >= 0} icon="exchange" />
             </div>
-            <div className="grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-3"><div className="min-w-0 lg:col-span-2"><Suspense fallback={<div className="min-h-[253px] rounded-lg border border-slate-200 bg-white p-4 text-center text-xs text-slate-500">Carregando métricas...</div>}><AnalyticsChart /></Suspense></div><div className="min-w-0 rounded-lg border border-slate-200 bg-white p-4"><h2 className="text-sm font-semibold text-slate-800">Mais vendidos vs. mais parados</h2><p className="mb-2 text-xs text-slate-500">Indicador ilustrativo da demonstração.</p><p className="py-8 text-center text-xs text-slate-400">{isDemoMode ? 'Os dados deste painel são fictícios.' : 'Ainda não há movimentações cadastradas.'}</p></div></div>
+            <div className="grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-3"><div className="min-w-0 lg:col-span-2"><Suspense fallback={<div className="min-h-[253px] rounded-lg border border-slate-200 bg-white p-4 text-center text-xs text-slate-500">Carregando métricas...</div>}><AnalyticsChart /></Suspense></div><div className="min-w-0 rounded-lg border border-slate-200 bg-white p-4"><h2 className="text-sm font-semibold text-slate-800">Mais vendidos vs. mais parados</h2><p className="mb-2 text-xs text-slate-500">Os dados serão calculados a partir das movimentações.</p><p className="py-8 text-center text-xs text-slate-400">Ainda não há movimentações cadastradas.</p></div></div>
             <UserTable
                 movements={movements}
                 loading={loading}
